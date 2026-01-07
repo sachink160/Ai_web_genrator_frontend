@@ -1,0 +1,24 @@
+[
+  {
+    "id": "modern",
+    "name": "Modern",
+    "description": "A sleek, modern landing page with gradient accents and card-based layout",
+    "file": "template-modern.html",
+    "category": "modern"
+  },
+  {
+    "id": "minimal",
+    "name": "Minimal",
+    "description": "Clean and minimal design with focus on content and white space",
+    "file": "template-minimal.html",
+    "category": "minimal"
+  },
+  {
+    "id": "corporate",
+    "name": "Corporate",
+    "description": "Professional corporate template with structured sections and formal styling",
+    "file": "template-corporate.html",
+    "category": "corporate"
+  }
+]
+

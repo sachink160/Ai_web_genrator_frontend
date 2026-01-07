@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Landing Page Generator</title>
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/website-generator.css" />
+  <link rel="stylesheet" href="../assets/css/website-updater.css" />
+  <link rel="stylesheet" href="../assets/css/tab-reorganization.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <script src="https://unpkg.com/@grapesjs/studio-sdk@latest/dist/index.umd.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/@grapesjs/studio-sdk@latest/dist/style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+
+<body>
+  <!-- Top Navigation Bar -->
+  <header class="top-bar">
+    <div class="top-bar-left">
+      <button id="leftSidebarToggle" class="sidebar-toggle-btn" title="Toggle Left Sidebar">
+        <i class="fas fa-bars"></i>
+      </button>
+      <h1 class="app-title">AI Landing Page Generator</h1>
+    </div>
+    <div class="top-bar-right">
+      <button id="fullscreenBtn" class="top-bar-btn" title="Fullscreen">
+        <i class="fas fa-expand"></i>
+      </button>
+      <button id="publishBtn" class="top-bar-btn publish-btn" title="Publish">
+        <i class="fas fa-rocket"></i>
+        <span>Show In Browser</span>
+      </button>
+      <button id="themeToggle" class="top-bar-btn" title="Toggle Theme">
+        <i class="fas fa-moon theme-icon" id="themeIcon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container with Three Columns -->
+  <div class="builder-container">
+    <!-- Left Sidebar -->
+    <aside id="leftSidebar" class="sidebar left-sidebar">
+      <!-- Main Tabs -->
+      <div class="sidebar-tabs main-tabs">
+        <button class="sidebar-tab active" data-maintab="landingpage">Landing Page</button>
+        <button class="sidebar-tab" data-maintab="website">Website</button>
+        <button class="sidebar-tab" data-maintab="template">Template</button>
+      </div>
+
+      <!-- Sub Tabs for Landing Page -->
+      <div class="sidebar-subtabs" id="landingpageSubtabs">
+        <button class="sidebar-subtab active" data-tab="input">Landing Page</button>
+        <button class="sidebar-subtab" data-tab="chat">Chat</button>
+      </div>
+
+      <!-- Sub Tabs for Website -->
+      <div class="sidebar-subtabs" id="websiteSubtabs" style="display: none;">
+        <button class="sidebar-subtab active" data-tab="websitegenerate">Website</button>
+        <button class="sidebar-subtab" data-tab="websiteupdate">Update Website</button>
+      </div>
+
+
+      <!-- Template Main Tab Content - Displayed directly when Template main tab is clicked -->
+      <div id="templateMainContent"
+        style="display: none; padding: 15px; overflow-y: auto; max-height: calc(100vh - 100px);">
+        <div class="panel-section">
+          <div class="template-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <h3 style="margin: 0;">Select Template</h3>
+              <button id="refreshTemplatesBtn" class="btn-icon-small" title="Refresh Templates">
+                <i class="fas fa-sync-alt"></i>
+              </button>
+            </div>
+            <p class="template-description" style="margin-bottom: 15px; font-size: 13px; color: var(--text-secondary);">
+              Select a design reference or "None" to generate from scratch.
+            </p>
+          </div>
+
+          <div class="template-grid" id="sharedTemplateGrid"
+            style="display: grid; grid-template-columns: 1fr; gap: 12px;">
+            <!-- Template cards will be rendered here by SharedTemplateManager -->
+          </div>
+
+          <div id="sharedSelectedTemplateDisplay"
+            style="display: none; margin-top: 20px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--accent-color);">
+            <p style="margin: 0; color: var(--text-primary); font-size: 14px; font-weight: 500;">
+              Selected: <span id="sharedSelectedTemplateName" style="color: var(--accent-color);">None</span>
+            </p>
+            <p id="sharedSelectedTemplateDescription"
+              style="margin-top: 4px; font-size: 12px; color: var(--text-tertiary); line-height: 1.4;"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-content">
+        <!-- Landing Page Sub-tab: Input -->
+        <div id="inputTab" class="tab-content active">
+          <div>
+            <div class="panel-section">
+              <div class="section-header">
+                <span class="step-number">1</span>
+                <h3>Describe Your Landing Page</h3>
+              </div>
+              <div class="input-section">
+                <textarea id="description"
+                  placeholder="Example: A modern coffee shop specializing in artisan coffee and sustainable practices. We offer organic blends, barista training, and cozy atmosphere for coffee lovers..."
+                  rows="5"></textarea>
+                <div class="char-count">
+                  <span id="charCount">0</span> characters
+                </div>
+              </div>
+            </div>
+            <div class="panel-section" id="stageTracker" style="display: none">
+              <div class="generation-header">
+                <p>Generation Progress</p>
+              </div>
+              <div class="stage-tracker">
+                <div class="stage-item" id="stage1">
+                  <div class="stage-icon">
+                    <div class="stage-spinner" style="display: none"></div>
+                    <i class="fas fa-check-circle stage-checkmark" style="display: none"></i>
+                    <i class="far fa-circle stage-circle" style="display: none"></i>
+                  </div>
+                  <div class="stage-content">
+                    <div class="stage-title">Stage 1: Generate Prompts</div>
+                    <div class="stage-message" id="stage1Message"></div>
+                  </div>
+                </div>
+                <div class="stage-item" id="stage2">
+                  <div class="stage-icon">
+                    <div class="stage-spinner" style="display: none"></div>
+                    <i class="fas fa-check-circle stage-checkmark" style="display: none"></i>
+                    <i class="far fa-circle stage-circle" style="display: none"></i>
+                  </div>
+                  <div class="stage-content">
+                    <div class="stage-title">Stage 2: Generate Images</div>
+                    <div class="stage-message" id="stage2Message"></div>
+                  </div>
+                </div>
+                <div class="stage-item" id="stage3">
+                  <div class="stage-icon">
+                    <div class="stage-spinner" style="display: none"></div>
+                    <i class="fas fa-check-circle stage-checkmark" style="display: none"></i>
+                    <i class="far fa-circle stage-circle" style="display: none"></i>
+                  </div>
+                  <div class="stage-content">
+                    <div class="stage-title">Stage 3: Generate HTML</div>
+                    <div class="stage-message" id="stage3Message"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="action-buttons-section">
+            <button id="generateBtn" class="btn-primary">
+              <i class="fas fa-magic btn-icon"></i>
+              <span>Generate Landing Page</span>
+            </button>
+            <div class="secondary-buttons" id="secondaryButtons" style="display: none">
+              <button id="openBtn" class="btn-secondary">
+                <i class="fas fa-external-link-alt"></i>
+                <span>Open in New Tab</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Landing Page Sub-tab: Template -->
+        <div id="templateTab" class="tab-content">
+          <div class="panel-section">
+            <div class="template-header">
+              <h3>Select Template (Optional)</h3>
+              <p class="template-description">
+                Choose a template to customize, or select "None" to generate
+                from scratch. You can preview templates before selecting.
+              </p>
+            </div>
+            <div class="template-grid" id="templateGrid">
+              <!-- Template cards will be rendered here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Landing Page Sub-tab: Chat -->
+        <div id="chatTab" class="tab-content">
+          <div class="chat-container">
+            <div>
+              <div class="chat-header">
+                <h3>Modify Content</h3>
+                <button id="clearChatBtn" class="btn-icon-small" title="Clear Chat">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+              <div class="chat-messages" id="chatMessages"></div>
+            </div>
+            <div>
+              <div id="chatTypingIndicator" class="typing-indicator" style="display: none">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="chat-input-container">
+                <div class="chat-input-wrapper">
+                  <textarea id="chatInput"
+                    placeholder="Describe what you want to change... (e.g., Change hero background to blue, make heading larger)"
+                    rows="3"></textarea>
+                  <button id="chatSendBtn" class="chat-send-btn" title="Send">
+                    <i class="fas fa-paper-plane"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Website Sub-tab: Generate -->
+        <div id="websitegenerateTab" class="tab-content">
+          <div>
+            <div class="panel-section">
+              <div class="section-header">
+                <span class="step-number">🌐</span>
+                <h3>Describe Your Website</h3>
+              </div>
+              <div class="input-section">
+                <p style="margin-bottom: 12px; color: var(--text-secondary); font-size: 14px;">
+                  Create a complete multi-page website with Home, About, Services, and Contact pages.
+                </p>
+                <textarea id="websiteDescription"
+                  placeholder="Example: A technology consulting company providing cloud migration, AI solutions, and cybersecurity services. We help businesses transform digitally with cutting-edge technology..."
+                  rows="5"></textarea>
+                <div class="char-count">
+                  <span id="websiteCharCount">0</span> characters
+                </div>
+              </div>
+            </div>
+
+            <!-- Website Generation Progress -->
+            <div class="panel-section" id="websiteStageTracker" style="display: none">
+              <div class="generation-header">
+                <p>Website Generation Progress</p>
+              </div>
+
+              <!-- Animated Progress Bar -->
+              <div class="progress-container" style="margin-bottom: 20px;">
+                <div class="progress-bar">
+                  <div class="progress-fill" id="websiteProgressBar" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="websiteProgressText">0%</div>
+              </div>
+
+              <!-- Status Message -->
+              <div id="websiteStatusMessage"
+                style="text-align: center; color: var(--text-secondary); font-size: 14px; margin-top: 12px;">
+                Initializing...
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons-section">
+            <button id="generateWebsiteBtn" class="btn-primary">
+              <i class="fas fa-globe btn-icon"></i>
+              <span>Generate Website</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Website Sub-tab: Template -->
+        <div id="websitetemplateTab" class="tab-content">
+          <div class="panel-section">
+            <div class="template-header">
+              <h3>Select Template (Optional)</h3>
+              <p class="template-description">
+                Choose a template to use as a design reference, or select "None" to generate
+                from scratch. You can preview and edit templates before generating.
+              </p>
+            </div>
+            <div class="template-grid" id="websiteTemplateGrid">
+              <!-- Template cards will be rendered here -->
+            </div>
+            <div id="websiteSelectedTemplateDisplay"
+              style="display: none; margin-top: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
+              <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">
+                Selected: <strong id="websiteSelectedTemplateName">None</strong>
+                <span id="websiteSelectedTemplateDescription"
+                  style="display: block; margin-top: 4px; font-size: 12px; color: var(--text-tertiary);"></span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Website Sub-tab: Update -->
+        <div id="websiteupdateTab" class="tab-content">
+          <div class="chat-container website-update-chat">
+            <div>
+              <div class="chat-header">
+                <h3>Update Website</h3>
+                <button id="clearWebsiteUpdateChatBtn" class="btn-icon-small" title="Clear Chat">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+
+              <!-- Info box -->
+              <div
+                style="background: var(--bg-primary); padding: 12px; margin: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+                <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                  <i class="fas fa-info-circle" style="color: #667eea;"></i>
+                  <strong>Examples:</strong> "Change colors to blue", "Update home page hero", "Make buttons larger"
+                </p>
+              </div>
+
+              <div class="chat-messages" id="websiteUpdateChatMessages">
+                <div class="chat-message ai">
+                  <div class="message-content">
+                    <p>👋 Hi! I can help you update your website. Tell me what you'd like to change.</p>
+                    <div style="margin-top: 10px; font-size: 13px;">
+                      <strong>Examples:</strong><br>
+                      • "Change all colors to blue theme"<br>
+                      • "Update home page hero text"<br>
+                      • "Make buttons 30% larger"<br>
+                      • "Use a different font"
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="websiteUpdateLoadingIndicator" class="update-loading" style="display: none; margin: 15px;">
+              <div class="loading-spinner"></div>
+              <span>Analyzing and updating...</span>
+            </div>
+
+            <!-- Changes Preview -->
+            <div id="websiteChangesPreview" class="changes-preview" style="display: none; margin: 15px;">
+              <!-- Preview content will be added here -->
+            </div>
+
+            <!-- Action Buttons -->
+            <div id="websiteUpdateActions" class="update-actions" style="display: none; margin: 15px;">
+              <button id="applyWebsiteChangesBtn" class="btn-apply">
+                <i class="fas fa-check"></i>
+                <span>Apply Changes</span>
+              </button>
+              <button id="rejectWebsiteChangesBtn" class="btn-reject">
+                <i class="fas fa-times"></i>
+                <span>Reject</span>
+              </button>
+            </div>
+
+            <div>
+              <div id="websiteUpdateTypingIndicator" class="typing-indicator" style="display: none">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+            <div class="chat-input-container">
+              <div class="chat-input-wrapper">
+                <textarea id="websiteUpdateInput"
+                  placeholder="Tell me what you want to change... (e.g., Change colors to blue, Update hero text)"
+                  rows="3"></textarea>
+                <button id="websiteUpdateSendBtn" class="chat-send-btn" title="Send">
+                  <i class="fas fa-paper-plane"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Canvas -->
+    <main class="canvas-area">
+      <div class="canvas-container">
+        <div id="previewPlaceholder" class="preview-placeholder">
+          <div class="placeholder-content">
+            <div class="placeholder-icon">
+              <i class="fas fa-palette"></i>
+            </div>
+            <h3>Your Preview Will Appear Here</h3>
+            <p>Follow these simple steps:</p>
+            <ol class="steps-list">
+              <li>Enter a description of your landing page</li>
+              <li>Click "Generate Landing Page"</li>
+              <li>Watch the magic happen! <i class="fas fa-sparkles"></i></li>
+            </ol>
+          </div>
+        </div>
+        <iframe id="previewFrame" class="preview-frame" style="display: none" frameborder="0"
+          title="Live Preview"></iframe>
+        <div id="grapesjs-editor" style="display: none; width: 100%; height: 100%"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Template Preview Modal -->
+  <div id="templatePreviewModal" class="template-preview-modal" style="display: none">
+    <div class="template-preview-content">
+      <div class="template-preview-header">
+        <h3>Template Preview</h3>
+        <button class="template-preview-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <iframe id="templatePreviewFrame" class="template-preview-frame"></iframe>
+    </div>
+  </div>
+
+  <script type="module" src="../assets/js/script.js"></script>
+</body>
+
+</html>

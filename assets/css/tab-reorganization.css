@@ -1,0 +1,121 @@
+/* Two-Level Tab Navigation Styles */
+
+/* Main Tabs Styling */
+.main-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border-color, #e0e0e0);
+}
+
+.main-tabs .sidebar-tab {
+  flex: 1;
+  padding: 16px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.main-tabs .sidebar-tab.active {
+  border-bottom-color: #667eea;
+  background: var(--bg-secondary, #ffffff);
+}
+
+/* Sub Tabs Styling */
+.sidebar-subtabs {
+  display: flex;
+  gap: 5px;
+  padding: 15px;
+  background: var(--bg-primary, #f8f9fa);
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
+  overflow-x: auto;
+}
+
+.sidebar-subtab {
+  padding: 8px 16px;
+  background: var(--bg-secondary, #ffffff);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  color: var(--text-secondary, #666);
+}
+
+.sidebar-subtab:hover {
+  background: var(--bg-tertiary, #f0f0f0);
+  border-color: #667eea;
+}
+
+.sidebar-subtab.active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-color: #667eea;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+/* Hide scrollbar for subtabs */
+.sidebar-subtabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.sidebar-subtabs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-subtabs::-webkit-scrollbar-thumb {
+  background: var(--border-color, #ddd);
+  border-radius: 2px;
+}
+
+/* Tab Reorganization Styles - Better spacing for merged tabs */
+
+/* General Styles */
+.template-description {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary, #666);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .main-tabs .sidebar-tab {
+    padding: 14px 12px;
+    font-size: 14px;
+  }
+
+  .sidebar-subtabs {
+    padding: 10px;
+    gap: 4px;
+  }
+
+  .sidebar-subtab {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .main-tabs {
+    border-bottom-color: #3d3d3d;
+  }
+
+  .sidebar-subtabs {
+    background: #2d2d2d;
+    border-bottom-color: #3d3d3d;
+  }
+
+  .sidebar-subtab {
+    background: #1e1e1e;
+    border-color: #3d3d3d;
+    color: #e0e0e0;
+  }
+
+  .sidebar-subtab:hover {
+    background: #3d3d3d;
+  }
+}
+

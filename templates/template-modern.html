@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TasteBite Restaurant</title>
+
+<style>
+:root {
+  --primary: #b91c1c;      /* Deep red */
+  --secondary: #f97316;    /* Orange */
+  --accent: #16a34a;       /* Green */
+  --dark: #1c1917;
+  --text: #44403c;
+  --bg: #fff7ed;
+  --card: #ffffff;
+  --radius: 14px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Poppins", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+
+/* ---------- Global ---------- */
+.container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 0 20px;
+}
+
+section {
+  padding: 80px 0;
+}
+
+h1, h2, h3 {
+  color: var(--dark);
+  line-height: 1.2;
+}
+
+.btn {
+  display: inline-block;
+  padding: 14px 30px;
+  background: var(--primary);
+  color: #fff;
+  text-decoration: none;
+  border-radius: var(--radius);
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: #991b1b;
+}
+
+/* ---------- Header ---------- */
+header {
+  background: #ffffffcc;
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  border-bottom: 1px solid #e7e5e4;
+  z-index: 10;
+}
+
+.nav {
+  height: 72px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+nav a {
+  margin-left: 22px;
+  text-decoration: none;
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  background: linear-gradient(135deg, #fff1f2, #ffedd5);
+}
+
+.hero-grid {
+  display: grid;
+  gap: 40px;
+}
+
+.hero h1 {
+  font-size: clamp(34px, 5vw, 54px);
+}
+
+.hero p {
+  margin: 18px 0 28px;
+  max-width: 520px;
+}
+
+/* ---------- Specials ---------- */
+.cards {
+  display: grid;
+  gap: 28px;
+}
+
+.card {
+  background: var(--card);
+  padding: 26px;
+  border-radius: var(--radius);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+}
+
+.card img {
+  width: 100%;
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+
+/* ---------- About ---------- */
+.about {
+  background: #ffffff;
+}
+
+.about-grid {
+  display: grid;
+  gap: 40px;
+}
+
+/* ---------- Menu ---------- */
+.menu-grid {
+  display: grid;
+  gap: 22px;
+}
+
+.menu-item {
+  background: var(--card);
+  padding: 20px;
+  border-radius: var(--radius);
+  display: flex;
+  justify-content: space-between;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+}
+
+.menu-item span {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* ---------- CTA ---------- */
+.cta {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  text-align: center;
+}
+
+.cta h2 {
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.cta .btn {
+  background: #fff;
+  color: var(--primary);
+}
+
+/* ---------- Footer ---------- */
+footer {
+  background: var(--dark);
+  color: #d6d3d1;
+  padding: 40px 0;
+}
+
+.footer-grid {
+  display: grid;
+  gap: 20px;
+}
+
+footer a {
+  color: #d6d3d1;
+  text-decoration: none;
+}
+
+/* ---------- Responsive ---------- */
+@media (min-width: 768px) {
+  .hero-grid {
+    grid-template-columns: 1.2fr 1fr;
+    align-items: center;
+  }
+
+  .cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .about-grid {
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+  }
+
+  .menu-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .footer-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+</style>
+</head>
+
+<body>
+
+<!-- Header -->
+<header>
+  <div class="container nav">
+    <div class="logo">TasteBite</div>
+    <nav>
+      <a href="#">Home</a>
+      <a href="#">Menu</a>
+      <a href="#">About</a>
+      <a href="#">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container hero-grid">
+    <div>
+      <h1>Delicious Food, Cozy Atmosphere</h1>
+      <p>
+        Experience the perfect blend of taste, tradition, and freshness.
+        Crafted with love and served with passion.
+      </p>
+      <a href="#" class="btn">Reserve a Table</a>
+    </div>
+    <div>
+      <img src="https://via.placeholder.com/520x360" alt="Restaurant Food" style="width:100%; border-radius:14px;">
+    </div>
+  </div>
+</section>
+
+<!-- Specials -->
+<section>
+  <div class="container">
+    <h2 style="text-align:center; margin-bottom:40px;">Chef’s Specials</h2>
+    <div class="cards">
+      <div class="card">
+        <img src="https://via.placeholder.com/300x200">
+        <h3>Grilled Chicken</h3>
+        <p>Perfectly marinated, smoky and juicy.</p>
+      </div>
+      <div class="card">
+        <img src="https://via.placeholder.com/300x200">
+        <h3>Veg Delight Bowl</h3>
+        <p>Healthy, fresh, and full of flavor.</p>
+      </div>
+      <div class="card">
+        <img src="https://via.placeholder.com/300x200">
+        <h3>Signature Pasta</h3>
+        <p>Classic Italian taste with our own twist.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About -->
+<section class="about">
+  <div class="container about-grid">
+    <div>
+      <h2>About Our Restaurant</h2>
+      <p>
+        TasteBite brings you authentic flavors using fresh ingredients.
+        Our chefs craft each dish with precision and love to give
+        you an unforgettable dining experience.
+      </p>
+    </div>
+    <div>
+      <img src="https://via.placeholder.com/500x320" style="width:100%; border-radius:14px;">
+    </div>
+  </div>
+</section>
+
+<!-- Menu -->
+<section>
+  <div class="container">
+    <h2 style="text-align:center; margin-bottom:30px;">Popular Menu</h2>
+    <div class="menu-grid">
+      <div class="menu-item">Butter Paneer <span>₹260</span></div>
+      <div class="menu-item">Chicken Biryani <span>₹320</span></div>
+      <div class="menu-item">Veg Fried Rice <span>₹190</span></div>
+      <div class="menu-item">Tandoori Roti <span>₹35</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="container">
+    <h2>Book Your Table Now</h2>
+    <a href="#" class="btn">Call Us Today</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container footer-grid">
+    <div>
+      <h3>TasteBite</h3>
+      <p>Fresh food, great taste.</p>
+    </div>
+    <div>
+      <h4>Contact</h4>
+      <p>📞 +91 98765 43210</p>
+      <p>📍 Your City, India</p>
+    </div>
+    <div>
+      <h4>Hours</h4>
+      <p>Mon – Sun</p>
+      <p>11:00 AM – 11:00 PM</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

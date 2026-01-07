@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Beauty Salon</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 0;
+            color: #333;
+            line-height: 1.6;
+            background-color: #fafafa;
+        }
+
+        header {
+            background-color: #e5e1e0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        header nav a {
+            margin: 0 15px;
+            text-decoration: none;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .hero {
+            background-image: linear-gradient(rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url('https://via.placeholder.com/1200x600');
+            background-size: cover;
+            background-position: center;
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin: 0;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            margin: 10px 0 20px;
+        }
+
+        .hero a {
+            text-decoration: none;
+            background-color: #d4ac0d;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+        }
+
+        .main-content {
+            padding: 40px 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        .services {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .service {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .service h3 {
+            margin-top: 0;
+        }
+
+        .footer {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .hero h1 {
+                font-size: 4rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            header nav a {
+                margin: 0 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="#home">Home</a>
+            <a href="#services">Services</a>
+            <a href="#about">About</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1>Welcome to Our Beauty Salon</h1>
+        <p>Experience luxury and relaxation with our personalized services.</p>
+        <a href="#services">Explore Our Services</a>
+    </section>
+
+    <main class="main-content">
+        <section id="services" class="services">
+            <div class="service">
+                <h3>Haircuts</h3>
+                <p>Precision cuts tailored to your personal style.</p>
+            </div>
+            <div class="service">
+                <h3>Coloring</h3>
+                <p>Vibrant colors using premium products.</p>
+            </div>
+            <div class="service">
+                <h3>Styling</h3>
+                <p>Elegant styles for any occasion.</p>
+            </div>
+            <div class="service">
+                <h3>Facials</h3>
+                <p>Relaxing treatments for glowing skin.</p>
+            </div>
+            <div class="service">
+                <h3>Nail Services</h3>
+                <p>Manicures and pedicures for perfect nails.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2023 Modern Beauty Salon</p>
+    </footer>
+</body>
+
+</html>
+```
