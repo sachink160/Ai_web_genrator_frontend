@@ -521,3 +521,61 @@
     height: 40px;
   }
 }
+
+/* Desktop Responsive Improvements */
+@media (min-width: 769px) {
+
+  /* Compensate for sidebar padding to achieve full-width display */
+  .website-update-chat .update-loading,
+  .website-update-chat .changes-preview,
+  .website-update-chat .update-actions {
+    margin-left: -4px;
+    margin-right: -4px;
+  }
+
+  .website-update-chat {
+    width: 100%;
+    max-width: none;
+  }
+
+  /* Ensure chat messages use available width */
+  .website-update-chat .chat-messages {
+    width: 100%;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  /* Full-width action buttons on desktop */
+  .website-update-chat .update-actions {
+    display: flex;
+    gap: 12px;
+    width: calc(100% + 8px);
+  }
+
+  .website-update-chat .btn-apply,
+  .website-update-chat .btn-reject {
+    flex: 1;
+    min-height: 48px;
+    font-size: 15px;
+  }
+
+  /* Better preview visibility */
+  .website-update-chat .changes-preview {
+    max-height: 250px;
+    width: calc(100% + 8px);
+  }
+
+  /* Loading indicator full width */
+  .website-update-chat .update-loading {
+    width: calc(100% + 8px);
+  }
+
+  /* Better chat input on desktop */
+  .website-update-chat .chat-input-container {
+    padding: 20px 4px;
+  }
+
+  .website-update-chat .chat-input-wrapper {
+    width: 100%;
+  }
+}

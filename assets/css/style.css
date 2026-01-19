@@ -248,7 +248,8 @@ body {
 .panel-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 16px;
+    padding: 20px;
 }
 
 .generation-header {
@@ -295,7 +296,7 @@ body {
 }
 
 .section-header h3 {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: var(--font-weight-semibold);
     color: var(--text-primary);
     margin: 0;
@@ -309,14 +310,14 @@ body {
 
 .input-section textarea {
     width: 100%;
-    padding: 12px;
+    padding: 14px 16px;
     border: 2px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 14px;
     font-family: inherit;
     resize: vertical;
-    transition: all 0.2s;
-    min-height: 100px;
+    transition: all 0.2s ease;
+    min-height: 110px;
     background: var(--bg-input);
     line-height: 1.6;
     color: var(--text-primary);
@@ -326,7 +327,7 @@ body {
     outline: none;
     border-color: var(--accent-color);
     background: var(--bg-secondary);
-    box-shadow: 0 0 0 4px rgba(147, 51, 234, 0.1);
+    box-shadow: 0 0 0 4px var(--accent-glow);
 }
 
 .input-section textarea::placeholder {
@@ -343,11 +344,12 @@ body {
 .action-buttons-section {
     display: flex;
     flex-direction: column;
-    padding-top: 12px;
+    padding-top: 16px;
     border-top: 1px solid var(--border-color);
     position: sticky;
     bottom: 0;
     z-index: 10;
+    background: var(--bg-sidebar);
 }
 
 .action-buttons {
@@ -360,22 +362,23 @@ body {
     background: var(--accent-gradient);
     color: white;
     border: none;
-    padding: 10px;
-    border-radius: 10px;
+    padding: 14px 20px;
+    border-radius: var(--radius-md);
     font-size: 15px;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s;
-    box-shadow: 0 4px 14px rgba(147, 51, 234, 0.4);
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px var(--accent-glow);
     width: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 8px 20px rgba(147, 51, 234, 0.5);
+    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -415,16 +418,16 @@ body {
     background: var(--bg-secondary);
     color: var(--text-secondary);
     border: 2px solid var(--border-color);
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 13px;
+    padding: 12px 18px;
+    border-radius: var(--radius-md);
+    font-size: 14px;
     font-weight: var(--font-weight-medium);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .btn-secondary:hover {

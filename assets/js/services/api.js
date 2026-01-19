@@ -123,10 +123,12 @@ class APIService {
      * Generate complete multi-page website using LangGraph workflow (SSE streaming)
      * @param {string} description - Business/product description
      * @param {string|null} template - Optional template HTML for styling reference
+     * @param {string|null} threadId - Optional thread ID for conversation continuity
+     * @param {Array|null} messages - Optional previous conversation messages
      * @param {Function} onProgress - Callback for progress updates
      * @returns {Promise<void>}
      */
-    async generateWebsite(description, template = null, onProgress = null) {
+    async generateWebsite(description, template = null, threadId = null, messages = null, onProgress = null) {
         if (!description || description.trim().length < 10) {
             throw new Error('Description must be at least 10 characters long');
         }
@@ -140,6 +142,16 @@ class APIService {
         // Add template if provided
         if (template && template.trim()) {
             payload.template = template.trim();
+        }
+
+        // Add thread_id for conversation continuity
+        if (threadId) {
+            payload.thread_id = threadId;
+        }
+
+        // Add previous messages for context
+        if (messages && Array.isArray(messages)) {
+            payload.messages = messages;
         }
 
         try {
@@ -240,4 +252,3 @@ class APIService {
 
 // Export singleton instance
 export const apiService = new APIService();
-

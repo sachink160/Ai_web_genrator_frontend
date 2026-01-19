@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="../assets/css/website-generator.css" />
   <link rel="stylesheet" href="../assets/css/website-updater.css" />
   <link rel="stylesheet" href="../assets/css/tab-reorganization.css" />
+  <link rel="stylesheet" href="../assets/css/chat-interface.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://unpkg.com/@grapesjs/studio-sdk@latest/dist/index.umd.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/@grapesjs/studio-sdk@latest/dist/style.css" />
@@ -198,9 +199,12 @@
             </div>
             <div>
               <div id="chatTypingIndicator" class="typing-indicator" style="display: none">
-                <span></span>
-                <span></span>
-                <span></span>
+                <div class="message-avatar">🤖</div>
+                <div class="typing-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
               </div>
               <div class="chat-input-container">
                 <div class="chat-input-wrapper">
@@ -234,6 +238,37 @@
                 <div class="char-count">
                   <span id="websiteCharCount">0</span> characters
                 </div>
+
+
+              </div>
+            </div>
+
+            <!-- Business Gathering Chat Section (hidden by default) -->
+            <div class="panel-section" id="websiteClarificationSection" style="display: none;">
+              <div class="chat-container website-chat">
+                <div>
+                  <div class="chat-header">
+                    <h3>💬 Business Information</h3>
+                    <button id="clearBusinessChatBtn" class="btn-icon-small" title="Start Over">
+                      <i class="fas fa-redo"></i>
+                    </button>
+                  </div>
+
+                  <div class="chat-messages" id="websiteBusinessChatMessages">
+                    <!-- Chat messages will be inserted here -->
+                  </div>
+                </div>
+
+                <div>
+                  <div class="chat-input-container">
+                    <div class="chat-input-wrapper">
+                      <textarea id="websiteQuestionAnswer" placeholder="Type your answer here..." rows="3"></textarea>
+                      <button id="submitAnswerBtn" class="chat-send-btn" title="Send">
+                        <i class="fas fa-paper-plane"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -243,8 +278,21 @@
                 <p>Website Generation Progress</p>
               </div>
 
-              <!-- Animated Progress Bar -->
-              <div class="progress-container" style="margin-bottom: 20px;">
+
+              <!-- Typing Indicator (for planning/chat phases) -->
+              <div id="websiteTypingIndicator" style="display: none; margin-bottom: 20px;">
+                <div class="typing-indicator">
+                  <span class="typing-text">AI is thinking</span>
+                  <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Animated Progress Bar (for generation phases) -->
+              <div class="progress-container" id="websiteProgressContainer" style="margin-bottom: 20px;">
                 <div class="progress-bar">
                   <div class="progress-fill" id="websiteProgressBar" style="width: 0%"></div>
                 </div>
@@ -258,12 +306,22 @@
               </div>
             </div>
           </div>
-
+          <!-- Quick Shortcut Button -->
+          <div style="margin-top: 12px;">
+            <button id="readyToGenerateBtn" class="btn-secondary"
+              style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px;">
+              <i class="fas fa-bolt"></i>
+              <span>Ready to Generate</span>
+            </button>
+            <p style="margin-top: 6px; font-size: 12px; color: var(--text-secondary); text-align: center;">
+              💡 Click to start generation immediately without additional questions
+            </p>
+          </div>
           <!-- Action Buttons -->
           <div class="action-buttons-section">
             <button id="generateWebsiteBtn" class="btn-primary">
               <i class="fas fa-globe btn-icon"></i>
-              <span>Generate Website</span>
+              <span>Make a Plan</span>
             </button>
           </div>
         </div>
@@ -295,25 +353,28 @@
         <!-- Website Sub-tab: Update -->
         <div id="websiteupdateTab" class="tab-content">
           <div class="chat-container website-update-chat">
-            <div>
-              <div class="chat-header">
-                <h3>Update Website</h3>
-                <button id="clearWebsiteUpdateChatBtn" class="btn-icon-small" title="Clear Chat">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
+            <!-- Header Section -->
+            <div class="chat-header">
+              <h3>Update Website</h3>
+              <button id="clearWebsiteUpdateChatBtn" class="btn-icon-small" title="Clear Chat">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
 
-              <!-- Info box -->
-              <div
-                style="background: var(--bg-primary); padding: 12px; margin: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
-                <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
-                  <i class="fas fa-info-circle" style="color: #667eea;"></i>
-                  <strong>Examples:</strong> "Change colors to blue", "Update home page hero", "Make buttons larger"
-                </p>
-              </div>
+            <!-- Info box -->
+            <div
+              style="background: var(--bg-primary); padding: 12px; margin: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
+              <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                <i class="fas fa-info-circle" style="color: #667eea;"></i>
+                <strong>Examples:</strong> "Change colors to blue", "Update home page hero", "Make buttons larger"
+              </p>
+            </div>
 
-              <div class="chat-messages" id="websiteUpdateChatMessages">
-                <div class="chat-message ai">
+            <!-- Scrollable Messages Area -->
+            <div class="chat-messages" id="websiteUpdateChatMessages">
+              <div class="chat-message ai">
+                <div class="message-avatar">🤖</div>
+                <div class="message-wrapper">
                   <div class="message-content">
                     <p>👋 Hi! I can help you update your website. Tell me what you'd like to change.</p>
                     <div style="margin-top: 10px; font-size: 13px;">
@@ -324,40 +385,52 @@
                       • "Use a different font"
                     </div>
                   </div>
+                  <div class="message-meta">
+                    <span class="message-timestamp" style="visibility: hidden;">Now</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <!-- Loading Indicator -->
-            <div id="websiteUpdateLoadingIndicator" class="update-loading" style="display: none; margin: 15px;">
-              <div class="loading-spinner"></div>
-              <span>Analyzing and updating...</span>
-            </div>
+            <!-- Interactive Elements Container (inside scrollable area) -->
+            <div style="padding: 0 15px; margin-bottom: 10px;">
+              <!-- Typing Indicator -->
+              <div id="websiteUpdateTypingIndicator" class="typing-indicator"
+                style="display: none; margin-bottom: 10px;">
+                <div class="message-avatar">🤖</div>
+                <div class="typing-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
 
-            <!-- Changes Preview -->
-            <div id="websiteChangesPreview" class="changes-preview" style="display: none; margin: 15px;">
-              <!-- Preview content will be added here -->
-            </div>
+              <!-- Loading Indicator -->
+              <div id="websiteUpdateLoadingIndicator" class="update-loading"
+                style="display: none; margin-bottom: 10px;">
+                <div class="loading-spinner"></div>
+                <span>Analyzing and updating...</span>
+              </div>
 
-            <!-- Action Buttons -->
-            <div id="websiteUpdateActions" class="update-actions" style="display: none; margin: 15px;">
-              <button id="applyWebsiteChangesBtn" class="btn-apply">
-                <i class="fas fa-check"></i>
-                <span>Apply Changes</span>
-              </button>
-              <button id="rejectWebsiteChangesBtn" class="btn-reject">
-                <i class="fas fa-times"></i>
-                <span>Reject</span>
-              </button>
-            </div>
+              <!-- Changes Preview -->
+              <div id="websiteChangesPreview" class="changes-preview" style="display: none; margin-bottom: 10px;">
+                <!-- Preview content will be added here -->
+              </div>
 
-            <div>
-              <div id="websiteUpdateTypingIndicator" class="typing-indicator" style="display: none">
-                <span></span>
-                <span></span>
-                <span></span>
+              <!-- Action Buttons -->
+              <div id="websiteUpdateActions" class="update-actions" style="display: none;">
+                <button id="applyWebsiteChangesBtn" class="btn-apply">
+                  <i class="fas fa-check"></i>
+                  <span>Apply Changes</span>
+                </button>
+                <button id="rejectWebsiteChangesBtn" class="btn-reject">
+                  <i class="fas fa-times"></i>
+                  <span>Reject</span>
+                </button>
               </div>
             </div>
+
+            <!-- Fixed Input Area -->
             <div class="chat-input-container">
               <div class="chat-input-wrapper">
                 <textarea id="websiteUpdateInput"

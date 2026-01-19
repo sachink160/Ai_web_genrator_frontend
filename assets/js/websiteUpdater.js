@@ -8,11 +8,21 @@ export class WebsiteUpdater {
     constructor(websiteGenerator, grapesJSEditor) {
         this.websiteGenerator = websiteGenerator;
         this.editor = grapesJSEditor;
+        this.folderPath = websiteGenerator?.folderPath || null; // Store folder path directly
         this.isUpdating = false;
         this.pendingUpdate = null; // Store update result before applying
         this.updateHistory = []; // Track update history
 
+        console.log('WebsiteUpdater initialized with folderPath:', this.folderPath);
         this.init();
+    }
+
+    /**
+     * Update the folder path (called after website generation)
+     */
+    setFolderPath(folderPath) {
+        this.folderPath = folderPath;
+        console.log('✓ Folder path set in WebsiteUpdater:', this.folderPath);
     }
 
     init() {
@@ -268,6 +278,11 @@ export class WebsiteUpdater {
             // Show success message
             this.addChatMessage('ai', '✨ Changes applied successfully! Your website has been updated.');
 
+            // Encourage continuation
+            setTimeout(() => {
+                this.addChatMessage('ai', '💬 Ready for more changes? Tell me what you\'d like to update next!');
+            }, 500);
+
             // Clear pending update
             this.pendingUpdate = null;
 
@@ -386,12 +401,12 @@ export class WebsiteUpdater {
             const currentPages = this.editor.getCurrentPages();
             const globalCss = this.editor.getGlobalCss();
 
-            // Call API
+            // Call API (without folder_path - don't auto-save yet)
             const result = await apiService.updateWebsite(
                 currentPages,
                 globalCss,
                 editRequest,
-                this.websiteGenerator.folderPath
+                null // Don't save yet - wait for user approval
             );
 
             // Store pending update
@@ -415,7 +430,7 @@ export class WebsiteUpdater {
         }
     }
 
-    applyTabUpdate() {
+    async applyTabUpdate() {
         if (!this.pendingUpdate) return;
 
         try {
@@ -443,8 +458,38 @@ export class WebsiteUpdater {
                 result: this.pendingUpdate
             });
 
+            // Save to files if folder path exists
+            console.log('🔍 DEBUG: websiteGenerator.folderPath =', this.websiteGenerator?.folderPath);
+            console.log('🔍 DEBUG: pendingUpdate.updated_pages =', Object.keys(this.pendingUpdate?.updated_pages || {}));
+            console.log('🔍 DEBUG: pendingUpdate.updated_global_css exists =', !!this.pendingUpdate?.updated_global_css);
+
+            if (this.websiteGenerator.folderPath && (this.pendingUpdate.updated_pages || this.pendingUpdate.updated_global_css)) {
+                try {
+                    console.log('✅ CONDITION MET - Starting file save...');
+                    console.log('Saving updated files to:', this.websiteGenerator.folderPath);
+
+                    // Call API with folder_path to save the updated content
+                    await apiService.updateWebsite(
+                        this.pendingUpdate.updated_pages || {},
+                        this.pendingUpdate.updated_global_css || '',
+                        'Applied changes to website',  // Simple description for the save operation
+                        this.websiteGenerator.folderPath  // Include folder path to trigger file saving
+                    );
+
+                    console.log('✓ Files saved successfully to disk');
+                } catch (error) {
+                    console.error('Error saving to files:', error);
+                    this.addTabChatMessage('error', '⚠️ Changes applied to preview but failed to save to files');
+                }
+            }
+
             // Show success
             this.addTabChatMessage('ai', '✨ Changes applied successfully!');
+
+            // Encourage continuation
+            setTimeout(() => {
+                this.addTabChatMessage('ai', '💬 What else would you like to update? You can make multiple changes!');
+            }, 500);
 
             // Clear pending
             this.pendingUpdate = null;
@@ -465,28 +510,88 @@ export class WebsiteUpdater {
         this.pendingUpdate = null;
         this.hideTabChangesPreview();
         this.showTabActionButtons(false);
-        this.addTabChatMessage('ai', '↩️ Changes rejected. Try a different request.');
+        this.addTabChatMessage('ai', '↩️ Changes rejected. What would you like to try instead?');
     }
 
     addTabChatMessage(type, message) {
         const chatMessages = document.getElementById('websiteUpdateChatMessages');
         if (!chatMessages) return;
 
-        const messageEl = document.createElement('div');
-        messageEl.className = `chat-message ${type}`;
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `chat-message ${type === 'system' ? 'ai' : type === 'error' ? 'ai' : type}`;
 
-        const contentEl = document.createElement('div');
-        contentEl.className = 'message-content';
+        // Create avatar
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.innerHTML = type === 'user' ? '👤' : '🤖';
 
-        const textP = document.createElement('p');
-        textP.innerHTML = message.replace(/\n/g, '<br>');
-        contentEl.appendChild(textP);
+        // Create message wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'message-wrapper';
 
-        messageEl.appendChild(contentEl);
-        chatMessages.appendChild(messageEl);
+        // Create content div
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        contentDiv.innerHTML = message.replace(/\n/g, '<br>');
 
-        // Scroll to bottom
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        // Create metadata
+        const meta = document.createElement('div');
+        meta.className = 'message-meta';
+
+        const timestamp = document.createElement('span');
+        timestamp.className = 'message-timestamp';
+        timestamp.textContent = new Date().toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+
+        const actions = document.createElement('div');
+        actions.className = 'message-actions';
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'message-action-btn';
+        copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+        copyBtn.title = 'Copy message';
+        copyBtn.addEventListener('click', () => this.copyMessage(message, copyBtn));
+
+        actions.appendChild(copyBtn);
+        meta.appendChild(timestamp);
+        meta.appendChild(actions);
+
+        // Assemble the message
+        wrapper.appendChild(contentDiv);
+        wrapper.appendChild(meta);
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(wrapper);
+
+        chatMessages.appendChild(messageDiv);
+
+        // Auto-scroll with smooth animation
+        setTimeout(() => {
+            chatMessages.scrollTo({
+                top: chatMessages.scrollHeight,
+                behavior: 'smooth'
+            });
+        }, 100);
+    }
+
+    copyMessage(text, button) {
+        // Strip HTML tags for plain text copy
+        const plainText = text.replace(/<br>/g, '\n').replace(/<[^>]*>/g, '');
+
+        navigator.clipboard.writeText(plainText).then(() => {
+            // Visual feedback
+            button.classList.add('copied');
+            button.innerHTML = '<i class="fas fa-check"></i>';
+
+            setTimeout(() => {
+                button.classList.remove('copied');
+                button.innerHTML = '<i class="fas fa-copy"></i>';
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+        });
     }
 
     showTabLoading(show) {
@@ -556,6 +661,23 @@ export class WebsiteUpdater {
         }
 
         this.hideUpdateChat();
+    }
+
+    // Save updates to files after user approval
+    async saveUpdatesToFiles(updateResult) {
+        try {
+            const response = await apiService.updateWebsite(
+                updateResult.updated_pages || {},
+                updateResult.updated_global_css || '',
+                'Apply approved changes to files',
+                this.websiteGenerator.folderPath // Now save to folder
+            );
+
+            console.log('Files saved successfully:', response);
+        } catch (error) {
+            console.error('Error saving files:', error);
+            throw error;
+        }
     }
 
     clearTabChat() {

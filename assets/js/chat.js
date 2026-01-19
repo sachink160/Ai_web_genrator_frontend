@@ -30,7 +30,7 @@ export class ChatManager {
                 chatInput.style.height = 'auto';
                 chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
             });
-        }   
+        }
         if (clearBtn) {
             clearBtn.addEventListener('click', () => {
                 this.clearChat();
@@ -98,16 +98,108 @@ export class ChatManager {
     renderMessage(type, text) {
         const chatMessages = document.getElementById('chatMessages');
         if (!chatMessages) return;
+
         const messageDiv = document.createElement('div');
-        messageDiv.className = `chat-message ${type}`;
+        messageDiv.className = `chat-message ${type === 'system' ? 'ai' : type}`;
+
+        // Create avatar
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.innerHTML = type === 'user' ? '👤' : '🤖';
+
+        // Create message wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'message-wrapper';
+
+        // Create content div
         const contentDiv = document.createElement('div');
         contentDiv.className = 'message-content';
-        const textP = document.createElement('p');
-        textP.textContent = text;
-        contentDiv.appendChild(textP);
-        messageDiv.appendChild(contentDiv);
+
+        // Parse text for better formatting
+        const formattedText = this.formatMessageText(text);
+        contentDiv.innerHTML = formattedText;
+
+        // Create metadata (timestamp + actions)
+        const meta = document.createElement('div');
+        meta.className = 'message-meta';
+
+        const timestamp = document.createElement('span');
+        timestamp.className = 'message-timestamp';
+        timestamp.textContent = this.getFormattedTime();
+
+        const actions = document.createElement('div');
+        actions.className = 'message-actions';
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'message-action-btn';
+        copyBtn.innerHTML = '<i class="fas fa-copy"></i>';
+        copyBtn.title = 'Copy message';
+        copyBtn.addEventListener('click', () => this.copyMessage(text, copyBtn));
+
+        actions.appendChild(copyBtn);
+        meta.appendChild(timestamp);
+        meta.appendChild(actions);
+
+        // Assemble the message
+        wrapper.appendChild(contentDiv);
+        wrapper.appendChild(meta);
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(wrapper);
+
         chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Auto-scroll with smooth animation
+        setTimeout(() => {
+            chatMessages.scrollTo({
+                top: chatMessages.scrollHeight,
+                behavior: 'smooth'
+            });
+        }, 100);
+    }
+
+    formatMessageText(text) {
+        // Convert newlines to <br>
+        let formatted = text.replace(/\n/g, '<br>');
+
+        // Convert markdown-style **bold** to <strong>
+        formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+        // Convert markdown-style *italic* to <em>
+        formatted = formatted.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+        // Convert inline code `code` to <code>
+        formatted = formatted.replace(/`(.*?)`/g, '<code>$1</code>');
+
+        // Wrap in paragraph if no HTML tags
+        if (!formatted.includes('<')) {
+            formatted = `<p>${formatted}</p>`;
+        }
+
+        return formatted;
+    }
+
+    getFormattedTime() {
+        const now = new Date();
+        return now.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    }
+
+    copyMessage(text, button) {
+        navigator.clipboard.writeText(text).then(() => {
+            // Visual feedback
+            button.classList.add('copied');
+            button.innerHTML = '<i class="fas fa-check"></i>';
+
+            setTimeout(() => {
+                button.classList.remove('copied');
+                button.innerHTML = '<i class="fas fa-copy"></i>';
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+        });
     }
     showTypingIndicator(show) {
         const indicator = document.getElementById('chatTypingIndicator');

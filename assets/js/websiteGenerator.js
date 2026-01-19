@@ -20,6 +20,11 @@ export class WebsiteGeneratorManager {
         this.targetProgress = 0;
         this.progressInterval = null;
 
+        // Business gathering / multi-turn conversation state
+        this.currentThreadId = null;
+        this.conversationMessages = [];
+        this.isAwaitingInput = false;
+
         this.init();
     }
 
@@ -29,13 +34,28 @@ export class WebsiteGeneratorManager {
 
     setupEventListeners() {
         const generateBtn = document.getElementById('generateWebsiteBtn');
+        const submitAnswerBtn = document.getElementById('submitAnswerBtn');
+        const clearChatBtn = document.getElementById('clearBusinessChatBtn');
+        const readyToGenerateBtn = document.getElementById('readyToGenerateBtn');
 
         if (generateBtn) {
             generateBtn.addEventListener('click', () => this.startWebsiteGeneration());
         }
+
+        if (submitAnswerBtn) {
+            submitAnswerBtn.addEventListener('click', () => this.submitAnswer());
+        }
+
+        if (clearChatBtn) {
+            clearChatBtn.addEventListener('click', () => this.clearBusinessChat());
+        }
+
+        if (readyToGenerateBtn) {
+            readyToGenerateBtn.addEventListener('click', () => this.handleReadyToGenerate());
+        }
     }
 
-    async startWebsiteGeneration() {
+    async startWebsiteGeneration(isFollowUp = false) {
         const description = document.getElementById('websiteDescription')?.value.trim();
 
         if (!description || description.length < 10) {
@@ -48,6 +68,15 @@ export class WebsiteGeneratorManager {
         }
 
         this.isGenerating = true;
+
+        // If this is a new generation (not a follow-up), reset conversation state
+        if (!isFollowUp) {
+            this.currentThreadId = null;
+            this.conversationMessages = [];
+            this.isAwaitingInput = false;
+            this.hideClarificationQuestions();
+        }
+
         this.showGenerationUI();
 
         // Get template HTML from template manager if available
@@ -57,10 +86,20 @@ export class WebsiteGeneratorManager {
             console.log('Using template as reference for website generation');
         }
 
+        // Log thread_id for debugging
+        console.log('🔄 Starting generation with thread_id:', this.currentThreadId || 'NEW');
+        console.log('📝 Messages in context:', this.conversationMessages.length);
+
         try {
-            await apiService.generateWebsite(description, templateHTML, (event) => {
-                this.handleStreamEvent(event);
-            });
+            await apiService.generateWebsite(
+                description,
+                templateHTML,
+                this.currentThreadId,
+                this.conversationMessages,
+                (event) => {
+                    this.handleStreamEvent(event);
+                }
+            );
         } catch (error) {
             console.error('Website generation error:', error);
             this.handleGenerationError(error);
@@ -72,10 +111,22 @@ export class WebsiteGeneratorManager {
     handleStreamEvent(event) {
         console.log('Stream event:', event);
 
-        const { step, status, progress, message, data, error } = event;
+        const { step, status, progress, message, data, error, ready, questions, thread_id, messages } = event;
+
+        // Handle business gathering questions
+        if (status === 'awaiting_input' && ready === false) {
+            console.log('🔔 Business gathering triggered!', { questions, thread_id });
+            this.handleAwaitingInput(event);
+            return;
+        }
+
+        // Determine which UI to show based on phase
+        const chatPhases = ['business_gathering', 'planning'];
+        const progressPhases = ['image_description', 'image_generation', 'html_generation', 'html_validation', 'file_storage'];
 
         // Map steps to target progress percentages
         const progressMapping = {
+            'business_gathering': { start: 5, end: 10, label: '💬 Gathering business information...' },
             'planning': { start: 10, end: 25, label: '📋 Planning website structure...' },
             'image_description': { start: 25, end: 35, label: '🖼️ Creating image descriptions...' },
             'image_generation': { start: 35, end: 60, label: '🎨 Generating images...' },
@@ -88,13 +139,22 @@ export class WebsiteGeneratorManager {
         const progressRange = progressMapping[step];
 
         if (status === 'in_progress') {
-            // Update status message
-            if (progressRange) {
-                this.updateStatusMessage(progressRange.label);
-                this.animateProgressTo(progressRange.start);
+            // Show typing indicator for chat/planning phases
+            if (chatPhases.includes(step)) {
+                this.showTypingIndicator();
+                this.updateStatusMessage(progressRange ? progressRange.label : 'Processing...');
+            }
+            // Show progress bar for technical generation phases
+            else if (progressPhases.includes(step)) {
+                this.showProgressBar();
+                if (progressRange) {
+                    this.updateStatusMessage(progressRange.label);
+                    this.animateProgressTo(progressRange.start);
+                }
             }
         } else if (status === 'completed' && step === 'complete') {
             // Final completion
+            this.showProgressBar();
             this.updateStatusMessage('✨ Website generation complete!');
             this.animateProgressTo(100, true);
             this.onGenerationComplete(data);
@@ -104,7 +164,11 @@ export class WebsiteGeneratorManager {
             this.handleGenerationError(new Error(error || message));
         } else if (status === 'completed') {
             // Individual step completed
-            if (progressRange) {
+            if (chatPhases.includes(step)) {
+                // Keep typing indicator but update message
+                this.updateStatusMessage(progressRange ? `✓ ${progressRange.label}` : 'Complete');
+            } else if (progressPhases.includes(step) && progressRange) {
+                this.showProgressBar();
                 this.animateProgressTo(progressRange.end);
                 this.updateStatusMessage(`✓ ${progressRange.label}`);
             }
@@ -193,6 +257,11 @@ export class WebsiteGeneratorManager {
         if (!this.websiteUpdater) {
             this.websiteUpdater = new WebsiteUpdater(this, this.htmlEditor);
             console.log('Website updater initialized');
+        }
+
+        // CRITICAL: Set the folder path
+        if (this.folderPath) {
+            this.websiteUpdater.setFolderPath(this.folderPath);
         }
 
         // Enable the update button
@@ -404,16 +473,36 @@ ${html}
         if (stageTracker) stageTracker.style.display = 'block';
         if (generateBtn) generateBtn.disabled = true;
 
+        // Start with typing indicator (for planning/business gathering)
+        this.showTypingIndicator();
+        this.updateStatusMessage('Starting website generation...');
+
         // Reset progress
         this.currentProgress = 0;
         this.targetProgress = 0;
         this.stopProgressAnimation();
         this.updateProgressDisplay(0);
+    }
 
-        // Start initial progress animation to 10%
-        setTimeout(() => {
-            this.animateProgressTo(10);
-        }, 300);
+    showTypingIndicator() {
+        const typingIndicator = document.getElementById('websiteTypingIndicator');
+        const progressContainer = document.getElementById('websiteProgressContainer');
+
+        if (typingIndicator) typingIndicator.style.display = 'block';
+        if (progressContainer) progressContainer.style.display = 'none';
+    }
+
+    hideTypingIndicator() {
+        const typingIndicator = document.getElementById('websiteTypingIndicator');
+        if (typingIndicator) typingIndicator.style.display = 'none';
+    }
+
+    showProgressBar() {
+        const typingIndicator = document.getElementById('websiteTypingIndicator');
+        const progressContainer = document.getElementById('websiteProgressContainer');
+
+        if (typingIndicator) typingIndicator.style.display = 'none';
+        if (progressContainer) progressContainer.style.display = 'block';
     }
 
     handleGenerationError(error) {
@@ -425,5 +514,286 @@ ${html}
 
         this.generatedPages = null;
         this.generatedImageUrls = null;
+    }
+
+    // Business Gathering Helper Functions
+
+    handleAwaitingInput(event) {
+        console.log('Business gathering needs more information', event);
+
+        // Store conversation state
+        this.currentThreadId = event.thread_id;
+        this.conversationMessages = event.messages || [];
+        this.isAwaitingInput = true;
+
+        console.log('✅ Thread ID stored:', this.currentThreadId);
+        console.log('📨 Messages stored:', this.conversationMessages.length);
+
+        // Hide progress UI
+        const stageTracker = document.getElementById('websiteStageTracker');
+        if (stageTracker) stageTracker.style.display = 'none';
+
+        // Stop progress animation
+        this.stopProgressAnimation();
+
+        // Display questions
+        this.displayClarificationQuestions(event.questions || []);
+
+        // Re-enable generate button
+        const generateBtn = document.getElementById('generateWebsiteBtn');
+        if (generateBtn) generateBtn.disabled = false;
+    }
+
+    displayClarificationQuestions(questions) {
+        const clarificationSection = document.getElementById('websiteClarificationSection');
+        const chatMessages = document.getElementById('websiteBusinessChatMessages');
+        const answerTextarea = document.getElementById('websiteQuestionAnswer');
+
+        if (!clarificationSection || !chatMessages) return;
+
+        // Don't clear previous messages - preserve chat history
+
+        // Create AI message with modern structure
+        const messageDiv = document.createElement('div');
+        messageDiv.className = 'chat-message ai';
+
+        const avatar = document.createElement('div');
+        avatar.className = 'message-avatar';
+        avatar.innerHTML = '🤖';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'message-wrapper';
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'message-content';
+        contentDiv.innerHTML = `
+            <p>I need more information to create your website. Please help me understand:</p>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                ${questions.map(q => `<li style="margin-bottom: 8px;">${q}</li>`).join('')}
+            </ul>
+            <p style="margin-top: 10px; font-size: 13px; opacity: 0.9;">
+                💡 <em>Tip: You can answer all questions together in one message.</em>
+            </p>
+        `;
+
+        const meta = document.createElement('div');
+        meta.className = 'message-meta';
+        const timestamp = document.createElement('span');
+        timestamp.className = 'message-timestamp';
+        timestamp.textContent = new Date().toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+        meta.appendChild(timestamp);
+
+        wrapper.appendChild(contentDiv);
+        wrapper.appendChild(meta);
+        messageDiv.appendChild(avatar);
+        messageDiv.appendChild(wrapper);
+
+        chatMessages.appendChild(messageDiv);
+
+        // Clear answer textarea
+        if (answerTextarea) {
+            answerTextarea.value = '';
+            answerTextarea.focus();
+        }
+
+        // Show the section
+        clarificationSection.style.display = 'block';
+
+        // Scroll to the section
+        clarificationSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // Auto-scroll chat to bottom
+        setTimeout(() => {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }, 100);
+    }
+
+    hideClarificationQuestions() {
+        const clarificationSection = document.getElementById('websiteClarificationSection');
+        if (clarificationSection) {
+            clarificationSection.style.display = 'none';
+        }
+    }
+
+    clearBusinessChat() {
+        const chatMessages = document.getElementById('websiteBusinessChatMessages');
+        if (chatMessages) {
+            chatMessages.innerHTML = '';
+        }
+
+        // Reset conversation state
+        this.currentThreadId = null;
+        this.conversationMessages = [];
+        this.isAwaitingInput = false;
+
+        // Hide section
+        this.hideClarificationQuestions();
+
+        // Clear description
+        const descriptionField = document.getElementById('websiteDescription');
+        if (descriptionField) {
+            descriptionField.value = '';
+        }
+    }
+
+    async submitAnswer() {
+        const answerTextarea = document.getElementById('websiteQuestionAnswer');
+        const chatMessages = document.getElementById('websiteBusinessChatMessages');
+        const answer = answerTextarea?.value.trim();
+
+        if (!answer || answer.length < 5) {
+            alert('Please provide an answer of at least 5 characters.');
+            return;
+        }
+
+        console.log('📤 Submitting answer with thread_id:', this.currentThreadId);
+        console.log('📝 Current messages count:', this.conversationMessages.length);
+
+        // Add user message to chat with modern structure
+        if (chatMessages) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message user';
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.innerHTML = '👤';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'message-wrapper';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = `<p>${answer.replace(/\n/g, '<br>')}</p>`;
+
+            const meta = document.createElement('div');
+            meta.className = 'message-meta';
+            const timestamp = document.createElement('span');
+            timestamp.className = 'message-timestamp';
+            timestamp.textContent = new Date().toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            meta.appendChild(timestamp);
+
+            wrapper.appendChild(contentDiv);
+            wrapper.appendChild(meta);
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(wrapper);
+
+            chatMessages.appendChild(messageDiv);
+
+            // Scroll to bottom
+            chatMessages.scrollTo({
+                top: chatMessages.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
+        // Clear the textarea
+        if (answerTextarea) {
+            answerTextarea.value = '';
+        }
+
+        // Update description with the answer
+        const descriptionField = document.getElementById('websiteDescription');
+        if (descriptionField) {
+            descriptionField.value = answer;
+        }
+
+        // Hide chat section temporarily (will show again if more questions needed)
+        this.hideClarificationQuestions();
+
+        // Continue generation with the answer (as a follow-up)
+        console.log('🔄 Continuing with follow-up request (isFollowUp=true)...');
+        await this.startWebsiteGeneration(true);
+    }
+
+    /**
+     * Handle "Ready to Generate" button click
+     * Automatically sends the message and triggers generation
+     */
+    async handleReadyToGenerate() {
+        const description = document.getElementById('websiteDescription')?.value.trim();
+
+        if (!description || description.length < 10) {
+            alert('Please enter a description of at least 10 characters first.');
+            return;
+        }
+
+        // If we're in awaiting input state, use submitAnswer flow
+        if (this.isAwaitingInput) {
+            const answerTextarea = document.getElementById('websiteQuestionAnswer');
+            const chatMessages = document.getElementById('websiteBusinessChatMessages');
+
+            const message = "ready to generate";
+
+            // Add user message to chat
+            if (chatMessages) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'chat-message user';
+
+                const avatar = document.createElement('div');
+                avatar.className = 'message-avatar';
+                avatar.innerHTML = '👤';
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper';
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.innerHTML = `<p>${message}</p>`;
+
+                const meta = document.createElement('div');
+                meta.className = 'message-meta';
+                const timestamp = document.createElement('span');
+                timestamp.className = 'message-timestamp';
+                timestamp.textContent = new Date().toLocaleTimeString('en-US', {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                });
+                meta.appendChild(timestamp);
+
+                wrapper.appendChild(contentDiv);
+                wrapper.appendChild(meta);
+                messageDiv.appendChild(avatar);
+                messageDiv.appendChild(wrapper);
+
+                chatMessages.appendChild(messageDiv);
+
+                // Scroll to bottom
+                chatMessages.scrollTo({
+                    top: chatMessages.scrollHeight,
+                    behavior: 'smooth'
+                });
+            }
+
+            // Clear the textarea
+            if (answerTextarea) {
+                answerTextarea.value = message;
+            }
+
+            // Update description
+            const descriptionField = document.getElementById('websiteDescription');
+            if (descriptionField) {
+                descriptionField.value = message;
+            }
+
+            // Hide chat section
+            this.hideClarificationQuestions();
+
+            // Continue generation
+            console.log('⚡ Ready to Generate triggered - continuing with follow-up...');
+            await this.startWebsiteGeneration(true);
+        } else {
+            // Just start generation normally
+            console.log('⚡ Ready to Generate triggered - starting fresh generation...');
+            await this.startWebsiteGeneration(false);
+        }
     }
 }
