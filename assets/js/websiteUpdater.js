@@ -401,12 +401,12 @@ export class WebsiteUpdater {
             const currentPages = this.editor.getCurrentPages();
             const globalCss = this.editor.getGlobalCss();
 
-            // Call API (without folder_path - don't auto-save yet)
+            // Call API with folder_path to save files immediately after processing
             const result = await apiService.updateWebsite(
                 currentPages,
                 globalCss,
                 editRequest,
-                null // Don't save yet - wait for user approval
+                this.websiteGenerator.folderPath // Include folder path to trigger file saving
             );
 
             // Store pending update
@@ -458,30 +458,7 @@ export class WebsiteUpdater {
                 result: this.pendingUpdate
             });
 
-            // Save to files if folder path exists
-            console.log('🔍 DEBUG: websiteGenerator.folderPath =', this.websiteGenerator?.folderPath);
-            console.log('🔍 DEBUG: pendingUpdate.updated_pages =', Object.keys(this.pendingUpdate?.updated_pages || {}));
-            console.log('🔍 DEBUG: pendingUpdate.updated_global_css exists =', !!this.pendingUpdate?.updated_global_css);
-
-            if (this.websiteGenerator.folderPath && (this.pendingUpdate.updated_pages || this.pendingUpdate.updated_global_css)) {
-                try {
-                    console.log('✅ CONDITION MET - Starting file save...');
-                    console.log('Saving updated files to:', this.websiteGenerator.folderPath);
-
-                    // Call API with folder_path to save the updated content
-                    await apiService.updateWebsite(
-                        this.pendingUpdate.updated_pages || {},
-                        this.pendingUpdate.updated_global_css || '',
-                        'Applied changes to website',  // Simple description for the save operation
-                        this.websiteGenerator.folderPath  // Include folder path to trigger file saving
-                    );
-
-                    console.log('✓ Files saved successfully to disk');
-                } catch (error) {
-                    console.error('Error saving to files:', error);
-                    this.addTabChatMessage('error', '⚠️ Changes applied to preview but failed to save to files');
-                }
-            }
+            // Files are already saved during the initial API call (no need for second call)
 
             // Show success
             this.addTabChatMessage('ai', '✨ Changes applied successfully!');
