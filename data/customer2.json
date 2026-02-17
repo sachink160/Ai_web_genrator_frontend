@@ -1,0 +1,22 @@
+{
+    "name": "Cloud Kitchen Express",
+    "email": "raj.patel@clouddining.com",
+    "phone": "+91-98765-43210",
+    "company": "Cloud Kitchen Express",
+    "position": "Founder & CEO",
+    "profile_photo": "https://i.pravatar.cc/300?img=13",
+    "address": {
+        "street": "456 MG Road",
+        "city": "Mumbai",
+        "state": "Maharashtra",
+        "country": "India",
+        "zipcode": "400001"
+    },
+    "bio": "Serial entrepreneur revolutionizing the food delivery industry with innovative cloud kitchen solutions. Serving 1000+ orders daily.",
+    "website": "https://cloudkitchenexpress.in",
+    "social": {
+        "linkedin": "https://linkedin.com/in/rajpatel",
+        "instagram": "https://instagram.com/cloudkitchenexpress",
+        "facebook": "https://facebook.com/cloudkitchenexpress"
+    }
+}

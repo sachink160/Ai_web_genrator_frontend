@@ -7,12 +7,15 @@
   <title>AI Landing Page Generator</title>
   <link rel="stylesheet" href="../assets/css/style.css" />
   <link rel="stylesheet" href="../assets/css/website-generator.css" />
-  <link rel="stylesheet" href="../assets/css/website-updater.css" />
+
   <link rel="stylesheet" href="../assets/css/tab-reorganization.css" />
   <link rel="stylesheet" href="../assets/css/chat-interface.css" />
+  <link rel="stylesheet" href="../assets/css/data-selector.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://unpkg.com/@grapesjs/studio-sdk@latest/dist/index.umd.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/@grapesjs/studio-sdk@latest/dist/style.css" />
+  <!-- Nunjucks for client-side Jinja template rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/nunjucks@3.2.4/browser/nunjucks.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 </head>
 
@@ -45,181 +48,21 @@
     <aside id="leftSidebar" class="sidebar left-sidebar">
       <!-- Main Tabs -->
       <div class="sidebar-tabs main-tabs">
-        <button class="sidebar-tab active" data-maintab="landingpage">Landing Page</button>
-        <button class="sidebar-tab" data-maintab="website">Website</button>
-        <button class="sidebar-tab" data-maintab="template">Template</button>
-      </div>
+        <button class="sidebar-tab active" data-maintab="website">Website</button>
 
-      <!-- Sub Tabs for Landing Page -->
-      <div class="sidebar-subtabs" id="landingpageSubtabs">
-        <button class="sidebar-subtab active" data-tab="input">Landing Page</button>
-        <button class="sidebar-subtab" data-tab="chat">Chat</button>
       </div>
 
       <!-- Sub Tabs for Website -->
       <div class="sidebar-subtabs" id="websiteSubtabs" style="display: none;">
         <button class="sidebar-subtab active" data-tab="websitegenerate">Website</button>
-        <button class="sidebar-subtab" data-tab="websiteupdate">Update Website</button>
+
       </div>
 
 
       <!-- Template Main Tab Content - Displayed directly when Template main tab is clicked -->
-      <div id="templateMainContent"
-        style="display: none; padding: 15px; overflow-y: auto; max-height: calc(100vh - 100px);">
-        <div class="panel-section">
-          <div class="template-header">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-              <h3 style="margin: 0;">Select Template</h3>
-              <button id="refreshTemplatesBtn" class="btn-icon-small" title="Refresh Templates">
-                <i class="fas fa-sync-alt"></i>
-              </button>
-            </div>
-            <p class="template-description" style="margin-bottom: 15px; font-size: 13px; color: var(--text-secondary);">
-              Select a design reference or "None" to generate from scratch.
-            </p>
-          </div>
 
-          <div class="template-grid" id="sharedTemplateGrid"
-            style="display: grid; grid-template-columns: 1fr; gap: 12px;">
-            <!-- Template cards will be rendered here by SharedTemplateManager -->
-          </div>
-
-          <div id="sharedSelectedTemplateDisplay"
-            style="display: none; margin-top: 20px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px; border: 1px solid var(--accent-color);">
-            <p style="margin: 0; color: var(--text-primary); font-size: 14px; font-weight: 500;">
-              Selected: <span id="sharedSelectedTemplateName" style="color: var(--accent-color);">None</span>
-            </p>
-            <p id="sharedSelectedTemplateDescription"
-              style="margin-top: 4px; font-size: 12px; color: var(--text-tertiary); line-height: 1.4;"></p>
-          </div>
-        </div>
-      </div>
 
       <div class="sidebar-content">
-        <!-- Landing Page Sub-tab: Input -->
-        <div id="inputTab" class="tab-content active">
-          <div>
-            <div class="panel-section">
-              <div class="section-header">
-                <span class="step-number">1</span>
-                <h3>Describe Your Landing Page</h3>
-              </div>
-              <div class="input-section">
-                <textarea id="description"
-                  placeholder="Example: A modern coffee shop specializing in artisan coffee and sustainable practices. We offer organic blends, barista training, and cozy atmosphere for coffee lovers..."
-                  rows="5"></textarea>
-                <div class="char-count">
-                  <span id="charCount">0</span> characters
-                </div>
-              </div>
-            </div>
-            <div class="panel-section" id="stageTracker" style="display: none">
-              <div class="generation-header">
-                <p>Generation Progress</p>
-              </div>
-              <div class="stage-tracker">
-                <div class="stage-item" id="stage1">
-                  <div class="stage-icon">
-                    <div class="stage-spinner" style="display: none"></div>
-                    <i class="fas fa-check-circle stage-checkmark" style="display: none"></i>
-                    <i class="far fa-circle stage-circle" style="display: none"></i>
-                  </div>
-                  <div class="stage-content">
-                    <div class="stage-title">Stage 1: Generate Prompts</div>
-                    <div class="stage-message" id="stage1Message"></div>
-                  </div>
-                </div>
-                <div class="stage-item" id="stage2">
-                  <div class="stage-icon">
-                    <div class="stage-spinner" style="display: none"></div>
-                    <i class="fas fa-check-circle stage-checkmark" style="display: none"></i>
-                    <i class="far fa-circle stage-circle" style="display: none"></i>
-                  </div>
-                  <div class="stage-content">
-                    <div class="stage-title">Stage 2: Generate Images</div>
-                    <div class="stage-message" id="stage2Message"></div>
-                  </div>
-                </div>
-                <div class="stage-item" id="stage3">
-                  <div class="stage-icon">
-                    <div class="stage-spinner" style="display: none"></div>
-                    <i class="fas fa-check-circle stage-checkmark" style="display: none"></i>
-                    <i class="far fa-circle stage-circle" style="display: none"></i>
-                  </div>
-                  <div class="stage-content">
-                    <div class="stage-title">Stage 3: Generate HTML</div>
-                    <div class="stage-message" id="stage3Message"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="action-buttons-section">
-            <button id="generateBtn" class="btn-primary">
-              <i class="fas fa-magic btn-icon"></i>
-              <span>Generate Landing Page</span>
-            </button>
-            <div class="secondary-buttons" id="secondaryButtons" style="display: none">
-              <button id="openBtn" class="btn-secondary">
-                <i class="fas fa-external-link-alt"></i>
-                <span>Open in New Tab</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Landing Page Sub-tab: Template -->
-        <div id="templateTab" class="tab-content">
-          <div class="panel-section">
-            <div class="template-header">
-              <h3>Select Template (Optional)</h3>
-              <p class="template-description">
-                Choose a template to customize, or select "None" to generate
-                from scratch. You can preview templates before selecting.
-              </p>
-            </div>
-            <div class="template-grid" id="templateGrid">
-              <!-- Template cards will be rendered here -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Landing Page Sub-tab: Chat -->
-        <div id="chatTab" class="tab-content">
-          <div class="chat-container">
-            <div>
-              <div class="chat-header">
-                <h3>Modify Content</h3>
-                <button id="clearChatBtn" class="btn-icon-small" title="Clear Chat">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </div>
-              <div class="chat-messages" id="chatMessages"></div>
-            </div>
-            <div>
-              <div id="chatTypingIndicator" class="typing-indicator" style="display: none">
-                <div class="message-avatar">🤖</div>
-                <div class="typing-dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-              <div class="chat-input-container">
-                <div class="chat-input-wrapper">
-                  <textarea id="chatInput"
-                    placeholder="Describe what you want to change... (e.g., Change hero background to blue, make heading larger)"
-                    rows="3"></textarea>
-                  <button id="chatSendBtn" class="chat-send-btn" title="Send">
-                    <i class="fas fa-paper-plane"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Website Sub-tab: Generate -->
         <div id="websitegenerateTab" class="tab-content">
           <div>
@@ -258,7 +101,6 @@
                     <!-- Chat messages will be inserted here -->
                   </div>
                 </div>
-
                 <div>
                   <div class="chat-input-container">
                     <div class="chat-input-wrapper">
@@ -317,6 +159,34 @@
               💡 Click to start generation immediately without additional questions
             </p>
           </div>
+
+          <!-- Data Selector Section (shown after website generation) -->
+          <div class="panel-section" id="dataSelectorSection" style="display: none;">
+            <div class="section-header">
+              <span class="step-number">📊</span>
+              <h3>Select Data Source</h3>
+            </div>
+            <div class="input-section">
+              <p style="margin-bottom: 12px; color: var(--text-secondary); font-size: 14px;">
+                Choose a data profile to populate your website template with different information.
+              </p>
+              <select id="jsonDataDropdown" class="data-selector-dropdown">
+                <option value="">-- Select Data File --</option>
+                <option value="customer1.json">Tech Professional - Sarah Johnson</option>
+                <option value="customer2.json">Cloud Kitchen - Raj Patel</option>
+                <option value="customer3.json">Creative Designer - Maria Garcia</option>
+              </select>
+              <button id="applyDataBtn" class="btn-secondary" style="width: 100%; margin-top: 12px;">
+                <i class="fas fa-sync-alt"></i>
+                <span>Apply Data</span>
+              </button>
+              <div id="currentDataInfo"
+                style="margin-top: 12px; padding: 10px; background: var(--bg-secondary); border-radius: 6px; font-size: 13px;">
+                <strong>Current Data:</strong> <span id="currentDataName">Default</span>
+              </div>
+            </div>
+          </div>
+
           <!-- Action Buttons -->
           <div class="action-buttons-section">
             <button id="generateWebsiteBtn" class="btn-primary">
@@ -327,122 +197,9 @@
         </div>
 
         <!-- Website Sub-tab: Template -->
-        <div id="websitetemplateTab" class="tab-content">
-          <div class="panel-section">
-            <div class="template-header">
-              <h3>Select Template (Optional)</h3>
-              <p class="template-description">
-                Choose a template to use as a design reference, or select "None" to generate
-                from scratch. You can preview and edit templates before generating.
-              </p>
-            </div>
-            <div class="template-grid" id="websiteTemplateGrid">
-              <!-- Template cards will be rendered here -->
-            </div>
-            <div id="websiteSelectedTemplateDisplay"
-              style="display: none; margin-top: 16px; padding: 12px; background: var(--bg-secondary); border-radius: 8px;">
-              <p style="margin: 0; color: var(--text-secondary); font-size: 14px;">
-                Selected: <strong id="websiteSelectedTemplateName">None</strong>
-                <span id="websiteSelectedTemplateDescription"
-                  style="display: block; margin-top: 4px; font-size: 12px; color: var(--text-tertiary);"></span>
-              </p>
-            </div>
-          </div>
-        </div>
+
 
         <!-- Website Sub-tab: Update -->
-        <div id="websiteupdateTab" class="tab-content">
-          <div class="chat-container website-update-chat">
-            <!-- Header Section -->
-            <div class="chat-header">
-              <h3>Update Website</h3>
-              <button id="clearWebsiteUpdateChatBtn" class="btn-icon-small" title="Clear Chat">
-                <i class="fas fa-trash"></i>
-              </button>
-            </div>
-
-            <!-- Info box -->
-            <div
-              style="background: var(--bg-primary); padding: 12px; margin: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
-              <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
-                <i class="fas fa-info-circle" style="color: #667eea;"></i>
-                <strong>Examples:</strong> "Change colors to blue", "Update home page hero", "Make buttons larger"
-              </p>
-            </div>
-
-            <!-- Scrollable Messages Area -->
-            <div class="chat-messages" id="websiteUpdateChatMessages">
-              <div class="chat-message ai">
-                <div class="message-avatar">🤖</div>
-                <div class="message-wrapper">
-                  <div class="message-content">
-                    <p>👋 Hi! I can help you update your website. Tell me what you'd like to change.</p>
-                    <div style="margin-top: 10px; font-size: 13px;">
-                      <strong>Examples:</strong><br>
-                      • "Change all colors to blue theme"<br>
-                      • "Update home page hero text"<br>
-                      • "Make buttons 30% larger"<br>
-                      • "Use a different font"
-                    </div>
-                  </div>
-                  <div class="message-meta">
-                    <span class="message-timestamp" style="visibility: hidden;">Now</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Interactive Elements Container (inside scrollable area) -->
-            <div style="padding: 0 15px; margin-bottom: 10px;">
-              <!-- Typing Indicator -->
-              <div id="websiteUpdateTypingIndicator" class="typing-indicator"
-                style="display: none; margin-bottom: 10px;">
-                <div class="message-avatar">🤖</div>
-                <div class="typing-dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
-                </div>
-              </div>
-
-              <!-- Loading Indicator -->
-              <div id="websiteUpdateLoadingIndicator" class="update-loading"
-                style="display: none; margin-bottom: 10px;">
-                <div class="loading-spinner"></div>
-                <span>Analyzing and updating...</span>
-              </div>
-
-              <!-- Changes Preview -->
-              <div id="websiteChangesPreview" class="changes-preview" style="display: none; margin-bottom: 10px;">
-                <!-- Preview content will be added here -->
-              </div>
-
-              <!-- Action Buttons -->
-              <div id="websiteUpdateActions" class="update-actions" style="display: none;">
-                <button id="applyWebsiteChangesBtn" class="btn-apply">
-                  <i class="fas fa-check"></i>
-                  <span>Apply Changes</span>
-                </button>
-                <button id="rejectWebsiteChangesBtn" class="btn-reject">
-                  <i class="fas fa-times"></i>
-                  <span>Reject</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Fixed Input Area -->
-            <div class="chat-input-container">
-              <div class="chat-input-wrapper">
-                <textarea id="websiteUpdateInput"
-                  placeholder="Tell me what you want to change... (e.g., Change colors to blue, Update hero text)"
-                  rows="3"></textarea>
-                <button id="websiteUpdateSendBtn" class="chat-send-btn" title="Send">
-                  <i class="fas fa-paper-plane"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </aside>
 
@@ -457,8 +214,8 @@
             <h3>Your Preview Will Appear Here</h3>
             <p>Follow these simple steps:</p>
             <ol class="steps-list">
-              <li>Enter a description of your landing page</li>
-              <li>Click "Generate Landing Page"</li>
+              <li>Enter a description of your website</li>
+              <li>Click "Make a Plan" to start generation</li>
               <li>Watch the magic happen! <i class="fas fa-sparkles"></i></li>
             </ol>
           </div>
@@ -471,19 +228,7 @@
   </div>
 
   <!-- Template Preview Modal -->
-  <div id="templatePreviewModal" class="template-preview-modal" style="display: none">
-    <div class="template-preview-content">
-      <div class="template-preview-header">
-        <h3>Template Preview</h3>
-        <button class="template-preview-close">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-      <iframe id="templatePreviewFrame" class="template-preview-frame"></iframe>
-    </div>
-  </div>
+
 
   <script type="module" src="../assets/js/script.js"></script>
 </body>
-
-</html>

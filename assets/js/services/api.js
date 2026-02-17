@@ -76,7 +76,7 @@ class APIService {
      * @param {string|null} template - Template HTML (optional)
      * @returns {Promise<Object>} HTML and CSS
      */
-    async generateHTML(description, images, template = null) {
+    async generateHTML(description, images) {
         if (!description || description.trim().length < 10) {
             throw new Error('Description must be at least 10 characters long');
         }
@@ -87,8 +87,7 @@ class APIService {
         };
         const payload = {
             description: description.trim(),
-            images: processedImages,
-            template
+            images: processedImages
         };
 
         return await this.request('/api/generate-html', {
@@ -128,7 +127,7 @@ class APIService {
      * @param {Function} onProgress - Callback for progress updates
      * @returns {Promise<void>}
      */
-    async generateWebsite(description, template = null, threadId = null, messages = null, onProgress = null) {
+    async generateWebsite(description, threadId = null, messages = null, onProgress = null) {
         if (!description || description.trim().length < 10) {
             throw new Error('Description must be at least 10 characters long');
         }
@@ -138,11 +137,6 @@ class APIService {
         const payload = {
             description: description.trim()
         };
-
-        // Add template if provided
-        if (template && template.trim()) {
-            payload.template = template.trim();
-        }
 
         // Add thread_id for conversation continuity
         if (threadId) {

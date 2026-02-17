@@ -1,0 +1,22 @@
+{
+  "name": "TechCorp Solutions",
+  "email": "sarah.johnson@techcorp.com",
+  "phone": "+1-555-0123",
+  "company": "TechCorp Solutions",
+  "position": "Senior Software Engineer",
+  "profile_photo": "https://i.pravatar.cc/300?img=1",
+  "address": {
+    "street": "123 Silicon Valley Rd",
+    "city": "San Francisco",
+    "state": "CA",
+    "country": "USA",
+    "zipcode": "94102"
+  },
+  "bio": "Passionate software engineer with 8+ years of experience in full-stack development. Specialized in React, Node.js, and cloud architectures.",
+  "website": "https://sarahjohnson.dev",
+  "social": {
+    "linkedin": "https://linkedin.com/in/sarahjohnson",
+    "github": "https://github.com/sarahjohnson",
+    "twitter": "https://twitter.com/sarahcodes"
+  }
+}

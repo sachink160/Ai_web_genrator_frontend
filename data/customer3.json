@@ -1,0 +1,22 @@
+{
+    "name": "Creative Studio Barcelona",
+    "email": "maria@creativestudio.art",
+    "phone": "+34-612-345-678",
+    "company": "Creative Studio Barcelona",
+    "position": "Art Director & Designer",
+    "profile_photo": "https://i.pravatar.cc/300?img=5",
+    "address": {
+        "street": "Carrer de Balmes 89",
+        "city": "Barcelona",
+        "state": "Catalonia",
+        "country": "Spain",
+        "zipcode": "08008"
+    },
+    "bio": "Award-winning designer creating stunning visual experiences for global brands. Specializing in branding, UI/UX, and motion graphics.",
+    "website": "https://mariagarcia.design",
+    "social": {
+        "linkedin": "https://linkedin.com/in/mariagarcia",
+        "behance": "https://behance.net/mariagarcia",
+        "dribbble": "https://dribbble.com/mariagarcia"
+    }
+}

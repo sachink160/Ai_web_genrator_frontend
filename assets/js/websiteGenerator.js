@@ -1,19 +1,21 @@
 import { apiService } from './services/api.js';
-import { WebsiteUpdater } from './websiteUpdater.js';
+import { templateRenderer } from './templateRenderer.js';
+import { dataManager } from './dataManager.js';
+
 
 export class WebsiteGeneratorManager {
-    constructor(grapesJSEditor = null, templateManager = null) {
+    constructor(grapesJSEditor = null) {
         this.isGenerating = false;
         this.currentStage = 0;
-        this.generatedPages = null;
+        this.generatedPages = null;  // Rendered HTML pages
+        this.jinjaTemplates = null;   // NEW: Jinja templates with variables
         this.generatedImageUrls = null;
         this.generatedPlan = null;
         this.folderPath = null;
         this.savedFiles = null;
         this.htmlEditor = grapesJSEditor;
-        this.templateManager = templateManager; // WebsiteTemplateManager instance
         this.currentPageName = 'home';
-        this.websiteUpdater = null; // Will be initialized after generation
+
 
         // Progress animation
         this.currentProgress = 0;
@@ -30,6 +32,7 @@ export class WebsiteGeneratorManager {
 
     init() {
         this.setupEventListeners();
+        this.setupDataManager();
     }
 
     setupEventListeners() {
@@ -55,6 +58,72 @@ export class WebsiteGeneratorManager {
         }
     }
 
+    setupDataManager() {
+        // Setup data selector event listeners
+        const applyDataBtn = document.getElementById('applyDataBtn');
+        const jsonDataDropdown = document.getElementById('jsonDataDropdown');
+
+        if (applyDataBtn) {
+            applyDataBtn.addEventListener('click', () => this.applySelectedData());
+        }
+
+        // Optional: Auto-apply on dropdown change
+        if (jsonDataDropdown) {
+            jsonDataDropdown.addEventListener('change', (e) => {
+                // User can click "Apply Data" button manually
+                // or we can auto-apply here
+            });
+        }
+    }
+
+    async applySelectedData() {
+        const dropdown = document.getElementById('jsonDataDropdown');
+        const selectedFile = dropdown?.value;
+
+        if (!selectedFile) {
+            alert('Please select a data file first.');
+            return;
+        }
+
+        if (!this.jinjaTemplates) {
+            alert('No Jinja templates available. Please generate a website first.');
+            return;
+        }
+
+        try {
+            console.log(`📊 Loading data from ${selectedFile}...`);
+            console.log('📄 Current jinjaTemplates structure:', this.jinjaTemplates);
+
+            // Load selected data file
+            const data = await dataManager.loadData(selectedFile);
+            console.log('✓ Data loaded:', data);
+
+            // Render templates with new data
+            console.log('Rendering templates with new data...');
+            const renderedPages = templateRenderer.renderPages(this.jinjaTemplates, data);
+            console.log('Templates rendered:', Object.keys(renderedPages));
+
+            // Update generated pages
+            this.generatedPages = renderedPages;
+
+            // Reload GrapesJS editor with new data
+            this.displayMultiPageEditor(renderedPages);
+
+            // Update UI to show current data
+            const currentDataName = document.getElementById('currentDataName');
+            if (currentDataName) {
+                currentDataName.textContent = dataManager.getDisplayName(selectedFile);
+            }
+
+            console.log('✅ Data applied successfully!');
+        } catch (error) {
+            console.error('❌ Error applying data:', error);
+            console.error('Stack trace:', error.stack);
+            alert(`Failed to apply data: ${error.message}\n\nPlease check the browser console for more details.`);
+        }
+    }
+
+
     async startWebsiteGeneration(isFollowUp = false) {
         const description = document.getElementById('websiteDescription')?.value.trim();
 
@@ -79,12 +148,7 @@ export class WebsiteGeneratorManager {
 
         this.showGenerationUI();
 
-        // Get template HTML from template manager if available
-        let templateHTML = null;
-        if (this.templateManager && this.templateManager.hasSelectedTemplate()) {
-            templateHTML = this.templateManager.getSelectedTemplateHTML();
-            console.log('Using template as reference for website generation');
-        }
+
 
         // Log thread_id for debugging
         console.log('🔄 Starting generation with thread_id:', this.currentThreadId || 'NEW');
@@ -93,7 +157,7 @@ export class WebsiteGeneratorManager {
         try {
             await apiService.generateWebsite(
                 description,
-                templateHTML,
+
                 this.currentThreadId,
                 this.conversationMessages,
                 (event) => {
@@ -231,7 +295,9 @@ export class WebsiteGeneratorManager {
     onGenerationComplete(data) {
         console.log('Website generation complete:', data);
 
-        this.generatedPages = data.pages;
+        // Store both Jinja templates (with variables) and rendered pages
+        this.jinjaTemplates = data.jinja_pages || data.pages;  // NEW: Store Jinja templates
+        this.generatedPages = data.pages;  // Rendered HTML pages
         this.generatedImageUrls = data.image_urls;
         this.generatedPlan = data.plan;
         this.folderPath = data.folder_path;
@@ -240,8 +306,8 @@ export class WebsiteGeneratorManager {
         // Initialize multi-page editor
         this.displayMultiPageEditor(this.generatedPages);
 
-        // Initialize Website Updater
-        this.initializeWebsiteUpdater();
+        // Show data selector section
+        this.showDataSelector();
 
         // Re-enable generate button
         const generateBtn = document.getElementById('generateWebsiteBtn');
@@ -250,23 +316,21 @@ export class WebsiteGeneratorManager {
         }
     }
 
-    /**
-     * Initialize the website updater after generation completes
-     */
-    initializeWebsiteUpdater() {
-        if (!this.websiteUpdater) {
-            this.websiteUpdater = new WebsiteUpdater(this, this.htmlEditor);
-            console.log('Website updater initialized');
+    showDataSelector() {
+        const dataSelectorSection = document.getElementById('dataSelectorSection');
+        if (dataSelectorSection) {
+            dataSelectorSection.style.display = 'block';
+            console.log('✓ Data selector shown');
         }
 
-        // CRITICAL: Set the folder path
-        if (this.folderPath) {
-            this.websiteUpdater.setFolderPath(this.folderPath);
+        // Set default data info
+        const currentDataName = document.getElementById('currentDataName');
+        if (currentDataName) {
+            currentDataName.textContent = 'Generated with default data';
         }
-
-        // Enable the update button
-        this.websiteUpdater.enable();
     }
+
+
 
     displayMultiPageEditor(pages) {
         if (!this.htmlEditor || !pages) {

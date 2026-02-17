@@ -1,0 +1,57 @@
+/* Data Selector Styling */
+
+.data-selector-dropdown {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.data-selector-dropdown:hover {
+    border-color: var(--accent-color);
+}
+
+.data-selector-dropdown:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.data-selector-dropdown option {
+    padding: 10px;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+
+#dataSelectorSection {
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#currentDataInfo {
+    border-left: 3px solid var(--accent-color);
+}
+
+#currentDataInfo strong {
+    color: var(--text-primary);
+}
+
+#currentDataName {
+    color: var(--accent-color);
+    font-weight: 500;
+}
