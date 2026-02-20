@@ -39,7 +39,14 @@ export class WebsiteGeneratorManager {
         const generateBtn = document.getElementById('generateWebsiteBtn');
         const submitAnswerBtn = document.getElementById('submitAnswerBtn');
         const clearChatBtn = document.getElementById('clearBusinessChatBtn');
+
         const readyToGenerateBtn = document.getElementById('readyToGenerateBtn');
+
+        // NEW: Approval UI Listeners
+        const approvePlanBtn = document.getElementById('approvePlanBtn');
+        const requestRevisionBtn = document.getElementById('requestRevisionBtn');
+        const submitRevisionBtn = document.getElementById('submitRevisionBtn');
+        const cancelRevisionBtn = document.getElementById('cancelRevisionBtn');
 
         if (generateBtn) {
             generateBtn.addEventListener('click', () => this.startWebsiteGeneration());
@@ -55,6 +62,37 @@ export class WebsiteGeneratorManager {
 
         if (readyToGenerateBtn) {
             readyToGenerateBtn.addEventListener('click', () => this.handleReadyToGenerate());
+        }
+
+        if (approvePlanBtn) {
+            approvePlanBtn.addEventListener('click', () => this.submitPlanApproval(true));
+        }
+
+        if (requestRevisionBtn) {
+            requestRevisionBtn.addEventListener('click', () => {
+                document.getElementById('revisionInputContainer').style.display = 'block';
+                document.getElementById('requestRevisionBtn').style.display = 'none';
+                document.getElementById('approvePlanBtn').style.display = 'none';
+            });
+        }
+
+        if (cancelRevisionBtn) {
+            cancelRevisionBtn.addEventListener('click', () => {
+                document.getElementById('revisionInputContainer').style.display = 'none';
+                document.getElementById('requestRevisionBtn').style.display = 'inline-block';
+                document.getElementById('approvePlanBtn').style.display = 'inline-block';
+            });
+        }
+
+        if (submitRevisionBtn) {
+            submitRevisionBtn.addEventListener('click', () => {
+                const feedback = document.getElementById('revisionFeedback').value || "";
+                if (feedback.trim().length > 0) {
+                    this.submitPlanApproval(false, feedback);
+                } else {
+                    alert("Please describe the changes you want.");
+                }
+            });
         }
     }
 
@@ -181,6 +219,13 @@ export class WebsiteGeneratorManager {
         if (status === 'awaiting_input' && ready === false) {
             console.log('🔔 Business gathering triggered!', { questions, thread_id });
             this.handleAwaitingInput(event);
+            return;
+        }
+
+        // NEW: Handle Plan Approval
+        if (status === 'awaiting_approval') {
+            console.log('🔔 Plan approval triggered!', event);
+            this.handlePlanApproval(event);
             return;
         }
 
@@ -858,6 +903,188 @@ ${html}
             // Just start generation normally
             console.log('⚡ Ready to Generate triggered - starting fresh generation...');
             await this.startWebsiteGeneration(false);
+        }
+    }
+    // Plan Approval Helper Functions
+
+    handlePlanApproval(event) {
+        console.log('Plan approval needed', event);
+
+        // Store conversation state and normalize messages
+        this.currentThreadId = event.thread_id;
+        this.conversationMessages = (event.messages || []).map(msg => {
+            // Normalize LangChain serialized messages to {role, content}
+            if (msg.type === 'human') return { role: 'user', content: msg.content };
+            if (msg.type === 'ai') return { role: 'assistant', content: msg.content };
+            if (msg.role) return msg; // Already correct
+            return { role: 'assistant', content: msg.content || '' }; // Fallback
+        });
+
+        this.isAwaitingInput = true;
+
+        // Hide progress UI
+        const stageTracker = document.getElementById('websiteStageTracker');
+        if (stageTracker) stageTracker.style.display = 'none';
+        this.stopProgressAnimation();
+
+        // Show Approval UI
+        const approvalSection = document.getElementById('planApprovalSection');
+        if (approvalSection) {
+            approvalSection.style.display = 'block';
+            // Scroll to section
+            approvalSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Render Structured Plan
+        const plan = event.plan;
+        const designSystem = event.design_system;
+
+        let planContent = '';
+
+        if (plan && designSystem) {
+            // Generate Structured HTML
+            const colors = designSystem.color_palette || {};
+            const typography = designSystem.typography || {};
+            const pages = plan.pages || [];
+
+            // Build Color Grid
+            const colorGridHTML = Object.entries(colors).map(([name, hex]) => `
+                <div class="color-swatch">
+                    <div class="color-circle" style="background-color: ${hex}"></div>
+                    <div class="color-info">
+                        <span class="color-name">${name.replace(/_/g, ' ')}</span>
+                        <span class="color-hex">${hex}</span>
+                    </div>
+                </div>
+            `).join('');
+
+            // Build Typography Preview
+            const headingFont = typography.heading_font || 'serif';
+            const bodyFont = typography.body_font || 'sans-serif';
+
+            const typoHTML = `
+                <div class="type-preview-heading" style="font-family: ${headingFont}">
+                    Heading Font (${headingFont})
+                </div>
+                <div class="type-preview-body" style="font-family: ${bodyFont}">
+                    Body Font (${bodyFont}). This is how your content will look.
+                </div>
+                <div class="font-meta" style="margin-top: 10px;">
+                   Scale: ${Object.entries(typography.type_scale || {}).map(([k, v]) => `${k}:${v}`).join(', ')}
+                </div>
+            `;
+
+            // Build Pages List
+            const pagesHTML = pages.map(page => `
+                <div class="plan-page-card">
+                    <div class="page-header">
+                        <span class="page-name">${page.name}</span>
+                        <span class="page-badge">${page.sections.length} Sections</span>
+                    </div>
+                    <div class="page-sections">
+                        ${page.sections.join(', ')}
+                    </div>
+                </div>
+            `).join('');
+
+            // Try to get summary from business_plan, fallback to last message if string, else empty
+            let summary = "Review the details below.";
+            if (event.plan && (event.plan.purpose || event.plan.business_plan)) {
+                summary = event.plan.business_plan || event.plan.purpose;
+            } else if (event.messages && event.messages.length > 0) {
+                // Try to extract summary from message if needed, but it's usually long
+            }
+
+            planContent = `
+                <div class="plan-preview-content">
+                    <div class="plan-summary-box">
+                        <div class="plan-section-title">Business Goal</div>
+                        <div style="font-style: italic;">"${summary.substring(0, 300)}${summary.length > 300 ? '...' : ''}"</div>
+                    </div>
+                    
+                    <div class="plan-grid">
+                        <div class="plan-col">
+                            <div class="plan-section-title">Pages & Structure</div>
+                            <div class="plan-pages-list">
+                                ${pagesHTML}
+                            </div>
+                        </div>
+                        
+                        <div class="plan-col">
+                            <div class="plan-section-title">Design System</div>
+                            
+                            <div class="color-palette-grid">
+                                ${colorGridHTML}
+                            </div>
+                            
+                            <div class="typography-box">
+                                ${typoHTML}
+                            </div>
+                            
+                            <div style="margin-top: 15px;">
+                                <div class="plan-section-title">Spacing</div>
+                                <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                                    Base: ${designSystem.spacing?.base_unit || 'N/A'} | 
+                                    Padding: ${designSystem.spacing?.section_padding_y || 'N/A'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            // Fallback to message content if plan object missing
+            let fallbackContent = "No plan details available.";
+            if (event.messages && event.messages.length > 0) {
+                const lastMsg = event.messages[event.messages.length - 1];
+                if (lastMsg.type === 'ai' || lastMsg.type === 'AIMessage' || lastMsg.role === 'assistant') {
+                    fallbackContent = `<div style="white-space: pre-wrap; font-family: monospace; font-size: 13px; line-height: 1.5; color: var(--text-primary);">${lastMsg.content}</div>`;
+                }
+            }
+            planContent = fallbackContent;
+        }
+
+        const previewContainer = document.getElementById('planPreviewContent');
+        if (previewContainer) {
+            previewContainer.innerHTML = planContent;
+        }
+    }
+
+    async submitPlanApproval(approved, feedback = null) {
+        const approvalSection = document.getElementById('planApprovalSection');
+        if (approvalSection) approvalSection.style.display = 'none';
+
+        // Reset UI state
+        document.getElementById('revisionInputContainer').style.display = 'none';
+        document.getElementById('requestRevisionBtn').style.display = 'inline-block';
+        document.getElementById('approvePlanBtn').style.display = 'inline-block';
+        document.getElementById('revisionFeedback').value = '';
+
+        // Add user response to messages
+        const responseText = approved ? "Approve" : feedback;
+
+        // Optimistically show progress again
+        this.showGenerationUI();
+        this.updateStatusMessage(approved ? "Plan approved! Generating website..." : "Revising plan based on feedback...");
+
+        // Add to local state
+        this.conversationMessages.push({
+            role: 'user',
+            content: responseText
+        });
+
+        console.log('🔄 Submitting approval decision:', responseText);
+
+        try {
+            await apiService.generateWebsite(
+                document.getElementById('websiteDescription')?.value || "Follow up",
+                this.currentThreadId,
+                this.conversationMessages,
+                (event) => this.handleStreamEvent(event)
+            );
+        } catch (error) {
+            console.error('Approval submission error:', error);
+            this.handleGenerationError(error);
         }
     }
 }

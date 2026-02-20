@@ -1,14 +1,14 @@
 import { UIManager } from './ui.js';
 import { GrapesJSEditor } from './editor.js';
-
 import { WebsiteGeneratorManager } from './websiteGenerator.js';
+import { WebsiteUpdaterManager } from './websiteUpdater.js';
 
 class App {
     constructor() {
         this.ui = null;
-
         this.editor = null;
         this.websiteGenerator = null;
+        this.websiteUpdater = null;
     }
     async init() {
         try {
@@ -19,6 +19,15 @@ class App {
 
             this.websiteGenerator = new WebsiteGeneratorManager(this.editor);
 
+            // Create the updater — it reads/writes pages via the generator reference
+            this.websiteUpdater = new WebsiteUpdaterManager(this.websiteGenerator);
+
+            // Hook: activate the Update tab once generation finishes
+            const originalOnComplete = this.websiteGenerator.onGenerationComplete.bind(this.websiteGenerator);
+            this.websiteGenerator.onGenerationComplete = (data) => {
+                originalOnComplete(data);
+                this.websiteUpdater.activate();
+            };
 
             this.setupPublishButton();
             this.setupMainTabContextTracking();

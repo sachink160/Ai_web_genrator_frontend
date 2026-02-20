@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="../assets/css/tab-reorganization.css" />
   <link rel="stylesheet" href="../assets/css/chat-interface.css" />
   <link rel="stylesheet" href="../assets/css/data-selector.css" />
+  <link rel="stylesheet" href="../assets/css/website-updater.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://unpkg.com/@grapesjs/studio-sdk@latest/dist/index.umd.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/@grapesjs/studio-sdk@latest/dist/style.css" />
@@ -55,6 +56,8 @@
       <!-- Sub Tabs for Website -->
       <div class="sidebar-subtabs" id="websiteSubtabs" style="display: none;">
         <button class="sidebar-subtab active" data-tab="websitegenerate">Website</button>
+        <button class="sidebar-subtab" data-tab="websiteupdate" id="updateWebsiteSubtab" style="display:none;">✏️
+          Update</button>
 
       </div>
 
@@ -109,6 +112,45 @@
                         <i class="fas fa-paper-plane"></i>
                       </button>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Plan Approval Section (hidden by default) -->
+            <div class="panel-section" id="planApprovalSection" style="display: none;">
+              <div class="section-header">
+                <span class="step-number">📋</span>
+                <h3>Review Website Plan</h3>
+              </div>
+
+              <div class="plan-preview-container" id="planPreviewContent"
+                style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 14px; max-height: 300px; overflow-y: auto;">
+                <!-- Plan details will be injected here -->
+              </div>
+
+              <div class="approval-actions">
+                <div class="approval-buttons" style="display: flex; gap: 10px; margin-bottom: 15px;">
+                  <button id="approvePlanBtn" class="btn-primary"
+                    style="background-color: #10B981; border-color: #10B981;">
+                    <i class="fas fa-check"></i> Approve Plan
+                  </button>
+                  <button id="requestRevisionBtn" class="btn-secondary"
+                    style="border-color: var(--text-secondary); color: var(--text-secondary);">
+                    <i class="fas fa-edit"></i> Request Changes
+                  </button>
+                </div>
+
+                <div id="revisionInputContainer"
+                  style="display: none; background: var(--bg-secondary); padding: 15px; border-radius: 8px;">
+                  <textarea id="revisionFeedback"
+                    placeholder="Describe the changes you want (e.g., 'Change primary color to blue', 'Add a blog page')..."
+                    rows="3"
+                    style="width: 100%; margin-bottom: 10px; background: var(--bg-primary); color: var(--text-primary); border: 1px solid var(--border-color); padding: 8px; border-radius: 4px;"></textarea>
+                  <div style="display: flex; gap: 10px;">
+                    <button id="submitRevisionBtn" class="btn-primary">Submit Revision</button>
+                    <button id="cancelRevisionBtn" class="btn-text"
+                      style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer;">Cancel</button>
                   </div>
                 </div>
               </div>
@@ -198,9 +240,36 @@
 
         <!-- Website Sub-tab: Template -->
 
+      </div><!-- end sidebar-content -->
 
-        <!-- Website Sub-tab: Update -->
-      </div>
+      <!-- Update Website Chat Panel (lives OUTSIDE sidebar-content for full height) -->
+      <div id="websiteupdatePanel"
+        style="display:none; flex: 1; flex-direction: column; min-height: 0; overflow: hidden;">
+
+
+        <div class="update-chat-panel">
+
+          <!-- Header -->
+          <div class="update-chat-header">
+            <h3>✏️ Update Website <span class="update-badge">AI</span></h3>
+          </div>
+
+          <!-- Messages -->
+          <div id="updateChatMessages"></div>
+
+          <!-- Input -->
+          <div class="update-input-area">
+            <div class="update-input-row">
+              <textarea id="updateChatInput" placeholder="Ask me to update your website…" rows="1"></textarea>
+              <button id="updateSendBtn" title="Send update request">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+            <div class="update-input-hint">Press Enter to send • Changes auto-save to disk</div>
+          </div>
+
+        </div>
+      </div><!-- end websiteupdatePanel -->
     </aside>
 
     <!-- Center Canvas -->
